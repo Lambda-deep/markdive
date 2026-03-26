@@ -37,6 +37,61 @@ md-dive outline README.md --json
 | `--depth <n>` | `2` | 表示する見出しの最大深さ |
 | `--json` | `false` | JSON形式で出力する |
 
+**出力例（テキスト）:**
+
+```
+$ md-dive outline spec.md
+1: Project Overview — High-level introduction to the project
+  1.1: Getting Started — How to install and run
+  1.2: Usage — Basic usage instructions.
+2: API Reference — The complete API reference.
+  2.1: Methods — List of available methods.
+```
+
+**出力例（`--depth 3`）:**
+
+```
+$ md-dive outline spec.md --depth 3
+1: Project Overview — High-level introduction to the project
+  1.1: Getting Started — How to install and run
+    1.1.1: Installation — Run npm install to install dependencies.
+    1.1.2: Configuration — Edit the config file as needed.
+  1.2: Usage — Basic usage instructions.
+    1.2.1: Basic Example — Here is a simple example.
+    1.2.2: Advanced Example — Here is a more advanced example.
+2: API Reference — The complete API reference.
+  2.1: Methods — List of available methods.
+    2.1.1: methodOne — Does something useful.
+    2.1.2: methodTwo — Does something else.
+```
+
+**出力例（`--json`）:**
+
+```json
+$ md-dive outline spec.md --json
+[
+  {
+    "id": "1",
+    "level": 1,
+    "title": "Project Overview",
+    "summary": "High-level introduction to the project",
+    "children": [
+      { "id": "1.1", "level": 2, "title": "Getting Started", "summary": "How to install and run", "children": [] },
+      { "id": "1.2", "level": 2, "title": "Usage", "summary": "Basic usage instructions.", "children": [] }
+    ]
+  },
+  {
+    "id": "2",
+    "level": 1,
+    "title": "API Reference",
+    "summary": "The complete API reference.",
+    "children": [
+      { "id": "2.1", "level": 2, "title": "Methods", "summary": "List of available methods.", "children": [] }
+    ]
+  }
+]
+```
+
 ### `inspect <file> --path <id>`
 
 指定したIDのセクション直下のサブセクション一覧を表示します。
@@ -52,6 +107,43 @@ md-dive inspect README.md --path "1.3" --json
 |---|---|---|
 | `--path <id>` | *(必須)* | 参照するセクションID（例: `"2"` または `"1.3"`） |
 | `--json` | `false` | JSON形式で出力する |
+
+**出力例（テキスト）:**
+
+```
+$ md-dive inspect spec.md --path "1"
+1: Project Overview
+  1.1: Getting Started — How to install and run
+  1.2: Usage — Basic usage instructions.
+```
+
+**出力例（`--json`）:**
+
+```json
+$ md-dive inspect spec.md --path "1" --json
+{
+  "id": "1",
+  "level": 1,
+  "title": "Project Overview",
+  "summary": "High-level introduction to the project",
+  "children": [
+    {
+      "id": "1.1",
+      "level": 2,
+      "title": "Getting Started",
+      "summary": "How to install and run",
+      "children": []
+    },
+    {
+      "id": "1.2",
+      "level": 2,
+      "title": "Usage",
+      "summary": "Basic usage instructions.",
+      "children": []
+    }
+  ]
+}
+```
 
 ### `read <file> --path <id>`
 
