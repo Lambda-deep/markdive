@@ -1,28 +1,28 @@
 # md-dive
 
-A CLI tool for hierarchical, on-demand navigation of large Markdown files. Designed to help AI coding agents and humans explore lengthy documents without loading the entire content at once.
+大規模なMarkdownファイルを階層的・オンデマンドにナビゲートするためのCLIツールです。AIコーディングエージェントや開発者が、ファイル全体を一度に読み込むことなく、必要なセクションだけを効率的に参照できるよう設計されています。
 
-## Motivation
+## 背景・動機
 
-Most AI agents load files in their entirety, filling the context window with irrelevant content. `md-dive` mirrors the human approach of first scanning the table of contents and then drilling into only the relevant sections.
+多くのAIエージェントはファイルを丸ごと読み込むため、コンテキストウィンドウが無関係なコンテンツで埋まってしまいます。`md-dive` は、まず目次（構造）を把握してから必要な箇所だけを精読するという、人間らしいアプローチをCLIとして提供します。
 
-## Installation
+## インストール
 
 ```bash
 npm install -g md-dive
 ```
 
-Or use it via `npx`:
+`npx` 経由での利用:
 
 ```bash
 npx md-dive outline README.md
 ```
 
-## Commands
+## コマンド
 
 ### `outline <file>`
 
-Print the first N heading levels (default: 2) as a structured overview.
+ドキュメント全体の最初のN階層（デフォルト: 2）を構造化して出力します。
 
 ```bash
 md-dive outline README.md
@@ -30,103 +30,103 @@ md-dive outline README.md --depth 3
 md-dive outline README.md --json
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Default | Description |
+| オプション | デフォルト | 説明 |
 |---|---|---|
-| `--depth <n>` | `2` | Maximum heading depth to display |
-| `--json` | `false` | Output as JSON |
+| `--depth <n>` | `2` | 表示する見出しの最大深さ |
+| `--json` | `false` | JSON形式で出力する |
 
 ### `inspect <file> --path <id>`
 
-List the immediate sub-sections of the section identified by `<id>`.
+指定したIDのセクション直下のサブセクション一覧を表示します。
 
 ```bash
 md-dive inspect README.md --path "2"
 md-dive inspect README.md --path "1.3" --json
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Default | Description |
+| オプション | デフォルト | 説明 |
 |---|---|---|
-| `--path <id>` | *(required)* | Section ID to inspect, e.g. `"2"` or `"1.3"` |
-| `--json` | `false` | Output as JSON |
+| `--path <id>` | *(必須)* | 参照するセクションID（例: `"2"` または `"1.3"`） |
+| `--json` | `false` | JSON形式で出力する |
 
 ### `read <file> --path <id>`
 
-Output the full content of the specified section, prefixed with a metadata header containing the source file name, section path, and breadcrumb context.
+指定したIDのセクション本文を、ソースファイル名・セクションパス・パンくずリストを含むメタデータヘッダーとともに出力します。
 
 ```bash
 md-dive read README.md --path "2.1"
 ```
 
-**Options:**
+**オプション:**
 
-| Option | Default | Description |
+| オプション | デフォルト | 説明 |
 |---|---|---|
-| `--path <id>` | *(required)* | Section ID to read, e.g. `"2.1"` |
+| `--path <id>` | *(必須)* | 読み込むセクションID（例: `"2.1"`） |
 
-**Output format:**
+**出力形式:**
 
 ```
 ---
 Source: README.md
 Path: 2.1
-Context: Chapter Two > Section 2.1
+Context: 第2章 > セクション2.1
 ---
 
-## Section 2.1
+## セクション2.1
 
-Section content here...
+セクションの本文...
 ```
 
-## Section IDs
+## セクションID
 
-Each heading is automatically assigned a hierarchical ID based on its position in the document:
+各見出しには、ドキュメント内での位置に基づいて階層IDが自動付与されます。
 
-| Heading | ID |
+| 見出し | ID |
 |---|---|
-| `# Introduction` (first) | `1` |
-| `## Setup` (first `##` under `#1`) | `1.1` |
-| `### Install` (first `###` under `1.1`) | `1.1.1` |
-| `# Usage` (second `#`) | `2` |
+| `# はじめに`（1つ目の`#`） | `1` |
+| `## セットアップ`（`#1` 直下の1つ目の`##`） | `1.1` |
+| `### インストール`（`1.1` 直下の1つ目の`###`） | `1.1.1` |
+| `# 使い方`（2つ目の`#`） | `2` |
 
-## Summaries
+## サマリー
 
-Add an HTML comment immediately after a heading to set a custom summary:
+見出しの直後にHTMLコメントを記述することで、そのセクションのサマリーを設定できます。
 
 ```markdown
-## Setup
-<!-- summary: How to install and configure the tool -->
+## セットアップ
+<!-- summary: ツールのインストールと設定方法 -->
 
-Installation steps go here...
+インストール手順はこちら...
 ```
 
-If no comment is present, the first ~50 characters of the section body are used as an automatic summary.
+コメントがない場合は、セクション本文の先頭50文字程度が自動的にサマリーとして使用されます。
 
-## Typical AI Agent Workflow
+## AIエージェントの典型的な利用フロー
 
 ```bash
-# 1. Get a high-level overview
+# 1. ドキュメント全体の概要を把握する
 md-dive outline large-spec.md --json
 
-# 2. Drill into a chapter of interest
+# 2. 関心のある章をさらに掘り下げる
 md-dive inspect large-spec.md --path "3" --json
 
-# 3. Read only the relevant section
+# 3. 必要なセクションだけを読み込む
 md-dive read large-spec.md --path "3.2"
 ```
 
-## Development
+## 開発
 
 ```bash
 npm install
-npm run build   # compile TypeScript
-npm test        # run Jest tests
-npm run lint    # type-check without emitting
+npm run build   # TypeScriptをコンパイル
+npm test        # Jestテストを実行
+npm run lint    # 型チェックのみ（出力なし）
 ```
 
-## Requirements
+## 動作要件
 
-- Node.js 18+
+- Node.js 18以上

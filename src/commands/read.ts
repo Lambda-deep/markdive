@@ -2,16 +2,16 @@ import * as path from "path";
 import { ParseResult } from "../types";
 import { findSection, buildBreadcrumb } from "../parser";
 
-/** Options for the read command. */
+/** read コマンドのオプション。 */
 export interface ReadOptions {
   path: string;
 }
 
 /**
- * Execute the `read` command.
+ * `read` コマンドを実行します。
  *
- * Outputs the full content of the specified section, prefixed with a metadata
- * block containing the source file name, section path, and breadcrumb context.
+ * 指定されたセクションの全コンテンツを、ソースファイル名・セクションパス・
+ * パンくずリストを含むメタデータブロックとともに出力します。
  */
 export function runRead(result: ParseResult, options: ReadOptions): void {
   const section = findSection(result, options.path);
@@ -23,7 +23,7 @@ export function runRead(result: ParseResult, options: ReadOptions): void {
   const filename = path.basename(result.filePath);
   const breadcrumb = buildBreadcrumb(section);
 
-  // Metadata header
+  // メタデータヘッダー
   console.log("---");
   console.log(`Source: ${filename}`);
   console.log(`Path: ${section.id}`);
@@ -31,11 +31,11 @@ export function runRead(result: ParseResult, options: ReadOptions): void {
   console.log("---");
   console.log("");
 
-  // Section heading
+  // セクション見出し
   const hashes = "#".repeat(section.level);
   console.log(`${hashes} ${section.title}`);
 
-  // Section body
+  // セクション本文
   if (section.content) {
     console.log("");
     console.log(section.content);

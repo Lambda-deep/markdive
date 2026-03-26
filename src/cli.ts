@@ -9,7 +9,7 @@ const program = new Command();
 
 program
   .name("md-dive")
-  .description("Hierarchical Markdown Structure Navigator for AI agents and humans")
+  .description("AIエージェントと人間のための階層的Markdownナビゲーター")
   .version("0.1.0");
 
 // ---------------------------------------------------------------------------
@@ -17,9 +17,9 @@ program
 // ---------------------------------------------------------------------------
 program
   .command("outline <file>")
-  .description("Print the first N levels of the document structure (default: depth 2)")
-  .option("--json", "Output as JSON", false)
-  .option("--depth <n>", "Maximum heading depth to display", "2")
+  .description("ドキュメント構造の最初のN階層を出力する（デフォルト: 深さ2）")
+  .option("--json", "JSON形式で出力する", false)
+  .option("--depth <n>", "表示する見出しの最大深さ", "2")
   .action((file: string, options: { json: boolean; depth: string }) => {
     const result = parseMarkdown(file);
     runOutline(result, {
@@ -33,9 +33,9 @@ program
 // ---------------------------------------------------------------------------
 program
   .command("inspect <file>")
-  .description("List the immediate sub-sections of the section at the given path")
-  .requiredOption("--path <id>", "Section ID to inspect, e.g. \"2\" or \"1.3\"")
-  .option("--json", "Output as JSON", false)
+  .description("指定したパスのセクション直下のサブセクション一覧を表示する")
+  .requiredOption("--path <id>", "参照するセクションID（例: \"2\" または \"1.3\"）")
+  .option("--json", "JSON形式で出力する", false)
   .action((file: string, options: { path: string; json: boolean }) => {
     const result = parseMarkdown(file);
     runInspect(result, { path: options.path, json: options.json });
@@ -46,8 +46,8 @@ program
 // ---------------------------------------------------------------------------
 program
   .command("read <file>")
-  .description("Output the full content of the section at the given path")
-  .requiredOption("--path <id>", "Section ID to read, e.g. \"2.1\"")
+  .description("指定したパスのセクション本文を全文出力する")
+  .requiredOption("--path <id>", "読み込むセクションID（例: \"2.1\"）")
   .action((file: string, options: { path: string }) => {
     const result = parseMarkdown(file);
     runRead(result, { path: options.path });

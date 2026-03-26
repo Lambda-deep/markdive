@@ -1,16 +1,16 @@
 import { ParseResult, Section, SectionJSON } from "../types";
 import { findSection } from "../parser";
 
-/** Options for the inspect command. */
+/** inspect コマンドのオプション。 */
 export interface InspectOptions {
   path: string;
   json: boolean;
 }
 
 /**
- * Execute the `inspect` command.
+ * `inspect` コマンドを実行します。
  *
- * Lists the immediate children of the section identified by `options.path`.
+ * `options.path` で指定されたセクションの直下の子セクション一覧を表示します。
  */
 export function runInspect(result: ParseResult, options: InspectOptions): void {
   const section = findSection(result, options.path);
@@ -42,7 +42,7 @@ export function runInspect(result: ParseResult, options: InspectOptions): void {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// ユーティリティ関数
 // ---------------------------------------------------------------------------
 
 function toJSON(section: Section): SectionJSON {

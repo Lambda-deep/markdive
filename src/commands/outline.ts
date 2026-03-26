@@ -1,15 +1,15 @@
 import { ParseResult, Section, SectionJSON } from "../types";
 
-/** Options for the outline command. */
+/** outline コマンドのオプション。 */
 export interface OutlineOptions {
   depth: number;
   json: boolean;
 }
 
 /**
- * Execute the `outline` command.
+ * `outline` コマンドを実行します。
  *
- * Prints the first `depth` levels of the document structure to stdout.
+ * ドキュメント構造の最初の `depth` レベルを標準出力に出力します。
  */
 export function runOutline(result: ParseResult, options: OutlineOptions): void {
   if (options.json) {
@@ -21,7 +21,7 @@ export function runOutline(result: ParseResult, options: OutlineOptions): void {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// ユーティリティ関数
 // ---------------------------------------------------------------------------
 
 function printSections(sections: Section[], maxDepth: number, indent: number): void {

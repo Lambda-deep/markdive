@@ -2,20 +2,20 @@ import * as fs from "fs";
 import * as path from "path";
 import { Section, ParseResult } from "./types";
 
-/** Maximum characters used for the auto-generated summary fallback. */
+/** 自動生成サマリーの最大文字数。 */
 const AUTO_SUMMARY_LENGTH = 50;
 
-/** Regex matching a Markdown ATX heading line, e.g. "## My Title" */
+/** Markdown ATX形式の見出し行にマッチする正規表現（例: "## My Title"） */
 const HEADING_RE = /^(#{1,6})\s+(.+)$/;
 
-/** Regex matching an HTML summary comment, e.g. "<!-- summary: text -->" */
+/** HTMLサマリーコメントにマッチする正規表現（例: "<!-- summary: text -->"） */
 const SUMMARY_COMMENT_RE = /^<!--\s*summary:\s*(.*?)\s*-->$/;
 
 /**
- * Parse a Markdown file into a tree of Sections.
+ * MarkdownファイルをSectionのツリーに解析します。
  *
- * @param filePath - Path to the Markdown file to parse.
- * @returns ParseResult containing the file path and root-level sections.
+ * @param filePath - 解析対象のMarkdownファイルのパス。
+ * @returns ファイルパスとルートレベルのセクションを含むParseResult。
  */
 export function parseMarkdown(filePath: string): ParseResult {
   const absolutePath = path.resolve(filePath);
@@ -23,13 +23,13 @@ export function parseMarkdown(filePath: string): ParseResult {
   const lines = raw.split("\n");
 
   // -----------------------------------------------------------------------
-  // Pass 1: collect heading positions and their raw content lines
+  // パス1: 見出しの位置と本文行を収集する
   // -----------------------------------------------------------------------
   interface RawSection {
     level: number;
     title: string;
-    lineStart: number; // index of the heading line itself
-    lineEnd: number;   // index of the last line belonging to this section (exclusive)
+    lineStart: number; // 見出し行のインデックス
+    lineEnd: number;   // このセクションが終わる行のインデックス（exclusive）
     contentLines: string[];
   }
 
@@ -48,7 +48,7 @@ export function parseMarkdown(filePath: string): ParseResult {
     }
   }
 
-  // Set lineEnd: each section ends where the next same-or-higher-level heading starts.
+  // lineEnd を設定: 各セクションは同レベルまたは上位レベルの次の見出しが始まる行で終わる。
   for (let i = 0; i < rawSections.length; i++) {
     const current = rawSections[i];
     for (let j = i + 1; j < rawSections.length; j++) {
@@ -57,8 +57,7 @@ export function parseMarkdown(filePath: string): ParseResult {
         break;
       }
     }
-    // Collect the lines that belong to this section (everything between the
-    // heading and the start of its first child, if any).
+    // このセクションに属する行（見出しから最初の子セクションの直前まで）を収集する。
     let childStart = current.lineEnd;
     for (let j = i + 1; j < rawSections.length; j++) {
       if (rawSections[j].level === current.level + 1) {
@@ -73,10 +72,9 @@ export function parseMarkdown(filePath: string): ParseResult {
   }
 
   // -----------------------------------------------------------------------
-  // Pass 2: assign hierarchical IDs
+  // パス2: 階層IDを付与する
   // -----------------------------------------------------------------------
-  // counters[n] holds the number of level-n headings seen since the last
-  // level-(n-1) heading.
+  // counters[n] は、直近の level-(n-1) 見出し以降に出現した level-n 見出しの数を保持する。
   const counters: number[] = new Array(7).fill(0);
 
   interface IndexedRaw extends RawSection {
@@ -84,7 +82,7 @@ export function parseMarkdown(filePath: string): ParseResult {
   }
 
   const indexed: IndexedRaw[] = rawSections.map((s) => {
-    // Increment counter at the current level and reset all deeper levels.
+    // 現在のレベルのカウンターをインクリメントし、それより深いレベルをすべてリセットする。
     counters[s.level]++;
     for (let d = s.level + 1; d <= 6; d++) {
       counters[d] = 0;
@@ -94,7 +92,7 @@ export function parseMarkdown(filePath: string): ParseResult {
   });
 
   // -----------------------------------------------------------------------
-  // Pass 3: extract summary and build Section objects
+  // パス3: サマリーを抽出してSectionオブジェクトを構築する
   // -----------------------------------------------------------------------
   const sectionMap = new Map<string, Section>();
 
@@ -113,7 +111,7 @@ export function parseMarkdown(filePath: string): ParseResult {
   }
 
   // -----------------------------------------------------------------------
-  // Pass 4: wire parent–child relationships
+  // パス4: 親子関係を構築する
   // -----------------------------------------------------------------------
   const roots: Section[] = [];
 
@@ -127,7 +125,7 @@ export function parseMarkdown(filePath: string): ParseResult {
         section.parent = parent;
         parent.children.push(section);
       } else {
-        // Orphaned section (parent heading was skipped in source) – treat as root.
+        // 孤立セクション（ソース内で親見出しがスキップされた場合）はルートとして扱う。
         roots.push(section);
       }
     }
@@ -137,12 +135,12 @@ export function parseMarkdown(filePath: string): ParseResult {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// ユーティリティ関数
 // ---------------------------------------------------------------------------
 
 /**
- * Derive the parent ID from a section ID string.
- * Returns null for top-level sections (no dot).
+ * セクションIDから親IDを導出します。
+ * トップレベルセクション（ドットなし）の場合は null を返します。
  */
 function getParentId(id: string): string | null {
   const lastDot = id.lastIndexOf(".");
@@ -150,14 +148,14 @@ function getParentId(id: string): string | null {
 }
 
 /**
- * Extract the summary for a section.
+ * セクションのサマリーを抽出します。
  *
- * Priority:
- *   1. First `<!-- summary: ... -->` comment found in contentLines.
- *   2. First AUTO_SUMMARY_LENGTH characters of the first non-empty, non-comment line.
+ * 優先順位:
+ *   1. contentLines 内で最初に見つかる `<!-- summary: ... -->` コメント。
+ *   2. 空行・コメント以外の最初の行の先頭 AUTO_SUMMARY_LENGTH 文字。
  */
 function extractSummary(contentLines: string[]): string {
-  // 1. Look for explicit summary comment.
+  // 1. 明示的なサマリーコメントを探す。
   for (const line of contentLines) {
     const trimmed = line.trim();
     const m = SUMMARY_COMMENT_RE.exec(trimmed);
@@ -166,16 +164,16 @@ function extractSummary(contentLines: string[]): string {
     }
   }
 
-  // 2. Auto-generate from the first substantial text line.
+  // 2. 最初の実質的なテキスト行から自動生成する。
   for (const line of contentLines) {
     const trimmed = line.trim();
     if (trimmed === "" || trimmed.startsWith("<!--")) {
       continue;
     }
-    // Strip inline Markdown formatting for a cleaner summary.
+    // インラインMarkdown記法を除去してよりクリーンなサマリーにする。
     const plain = trimmed
-      .replace(/!\[.*?\]\(.*?\)/g, "")  // images
-      .replace(/\[.*?\]\(.*?\)/g, "$&") // keep link text
+      .replace(/!\[.*?\]\(.*?\)/g, "")  // 画像を除去
+      .replace(/\[.*?\]\(.*?\)/g, "$&") // リンクテキストは保持
       .replace(/[`*_~]/g, "")
       .trim();
     if (plain.length === 0) {
@@ -188,12 +186,12 @@ function extractSummary(contentLines: string[]): string {
 }
 
 /**
- * Join content lines into a single string, trimming leading/trailing blank lines.
+ * コンテンツ行を結合して文字列にし、先頭・末尾の空行を除去します。
  */
 function buildContent(contentLines: string[]): string {
-  // Remove the summary comment line from displayed content.
+  // サマリーコメント行を表示コンテンツから除外する。
   const filtered = contentLines.filter((l) => !SUMMARY_COMMENT_RE.test(l.trim()));
-  // Trim leading/trailing blank lines.
+  // 先頭・末尾の空行を除去する。
   let start = 0;
   let end = filtered.length;
   while (start < end && filtered[start].trim() === "") start++;
@@ -202,12 +200,12 @@ function buildContent(contentLines: string[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// Lookup helpers (exported for use by command modules)
+// 検索ユーティリティ（コマンドモジュールから使用）
 // ---------------------------------------------------------------------------
 
 /**
- * Find a section by its ID within a parsed result.
- * Returns undefined if not found.
+ * 解析結果の中からIDでセクションを検索します。
+ * 見つからない場合は undefined を返します。
  */
 export function findSection(result: ParseResult, id: string): Section | undefined {
   return findInList(result.sections, id);
@@ -223,8 +221,8 @@ function findInList(sections: Section[], id: string): Section | undefined {
 }
 
 /**
- * Build the breadcrumb context string for a section:
- *   "Grandparent > Parent > Current"
+ * セクションのパンくずリスト文字列を構築します:
+ *   "祖先 > 親 > 現在"
  */
 export function buildBreadcrumb(section: Section): string {
   const parts: string[] = [];

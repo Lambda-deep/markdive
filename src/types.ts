@@ -1,35 +1,35 @@
 /**
- * Represents a single section parsed from a Markdown file.
+ * Markdownファイルから解析された1つのセクションを表します。
  */
 export interface Section {
-  /** Hierarchical ID, e.g. "1", "1.2", "2.1.3" */
+  /** 階層ID（例: "1"、"1.2"、"2.1.3"） */
   id: string;
-  /** Heading level (1–6) */
+  /** 見出しレベル（1〜6） */
   level: number;
-  /** Heading title text (without leading # characters) */
+  /** 見出しのタイトルテキスト（先頭の # 記号を除く） */
   title: string;
-  /** Summary from <!-- summary: ... --> comment, or auto-generated from content */
+  /** <!-- summary: ... --> コメントから取得したサマリー、またはコンテンツから自動生成したサマリー */
   summary: string;
-  /** Raw content lines belonging to this section (excluding sub-section content) */
+  /** このセクションに属する本文（サブセクションのコンテンツは含まない） */
   content: string;
-  /** Child sections */
+  /** 子セクションの配列 */
   children: Section[];
-  /** Reference to parent section, or null for top-level sections */
+  /** 親セクションへの参照（トップレベルセクションの場合は null） */
   parent: Section | null;
 }
 
 /**
- * Result of parsing a Markdown file.
+ * Markdownファイルの解析結果。
  */
 export interface ParseResult {
-  /** Absolute or relative path of the source file */
+  /** ソースファイルの絶対パスまたは相対パス */
   filePath: string;
-  /** Top-level sections */
+  /** トップレベルセクションの配列 */
   sections: Section[];
 }
 
 /**
- * JSON-serialisable representation of a section (without circular parent reference).
+ * セクションのJSON直列化可能な表現（循環参照となる parent を含まない）。
  */
 export interface SectionJSON {
   id: string;
