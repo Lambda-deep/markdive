@@ -1,0 +1,1 @@
+{"version":3,"file":"outline.d.ts","sourceRoot":"","sources":["../../src/commands/outline.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,WAAW,EAAwB,MAAM,UAAU,CAAC;AAE7D,0BAA0B;AAC1B,MAAM,WAAW,cAAc;IAC7B,KAAK,EAAE,MAAM,CAAC;IACd,IAAI,EAAE,OAAO,CAAC;CACf;AAED;;;;GAIG;AACH,wBAAgB,UAAU,CAAC,MAAM,EAAE,WAAW,EAAE,OAAO,EAAE,cAAc,GAAG,IAAI,CAO7E"}
