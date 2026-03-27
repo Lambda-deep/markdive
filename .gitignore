@@ -3,3 +3,25 @@ dist/
 *.js.map
 *.d.ts.map
 coverage/
+
+# 環境変数・機密情報
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+
+# エディター・IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*~
+
+# OS関連
+.DS_Store
+Thumbs.db
