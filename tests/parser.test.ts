@@ -1,6 +1,6 @@
-import * as path from "path";
-import { parseMarkdown, findSection, buildBreadcrumb } from "../src/parser";
-import { Section } from "../src/types";
+import * as path from "node:path";
+import { buildBreadcrumb, findSection, parseMarkdown } from "../src/parser";
+import type { Section } from "../src/types";
 
 const fixturePath = (name: string) => path.join(__dirname, "fixtures", name);
 
@@ -22,9 +22,7 @@ describe("parseMarkdown – sample.md", () => {
     });
 
     test("extracts explicit summary comment", () => {
-        expect(result.sections[0].summary).toBe(
-            "High-level introduction to the project",
-        );
+        expect(result.sections[0].summary).toBe("High-level introduction to the project");
     });
 
     test("extracts sub-section summary comment", () => {
@@ -64,7 +62,7 @@ describe("parseMarkdown – deep.md (auto-summary)", () => {
     test("auto-summary is truncated at 50 chars with ellipsis", () => {
         const section11 = findSection(result, "1.1");
         expect(section11).toBeDefined();
-        const summary = section11!.summary;
+        const summary = section11?.summary ?? "";
         // Should be truncated (original content is > 50 chars)
         expect(summary.endsWith("...")).toBe(true);
         expect(summary.length).toBeLessThanOrEqual(53); // 50 + "..."
@@ -73,14 +71,14 @@ describe("parseMarkdown – deep.md (auto-summary)", () => {
     test("short content auto-summary has no ellipsis", () => {
         const section12 = findSection(result, "1.2");
         expect(section12).toBeDefined();
-        expect(section12!.summary).toBe("Short content.");
-        expect(section12!.summary.endsWith("...")).toBe(false);
+        expect(section12?.summary).toBe("Short content.");
+        expect(section12?.summary.endsWith("...")).toBe(false);
     });
 
     test("deep nesting IDs are correct", () => {
         const deep = findSection(result, "2.1.1");
         expect(deep).toBeDefined();
-        expect(deep!.title).toBe("Deep Section 2.1.1");
+        expect(deep?.title).toBe("Deep Section 2.1.1");
     });
 });
 
@@ -103,13 +101,13 @@ describe("findSection", () => {
     test("finds a top-level section", () => {
         const s = findSection(result, "1");
         expect(s).toBeDefined();
-        expect(s!.title).toBe("Project Overview");
+        expect(s?.title).toBe("Project Overview");
     });
 
     test("finds a deeply nested section", () => {
         const s = findSection(result, "1.1.1");
         expect(s).toBeDefined();
-        expect(s!.title).toBe("Installation");
+        expect(s?.title).toBe("Installation");
     });
 
     test("returns undefined for non-existent ID", () => {
@@ -122,15 +120,13 @@ describe("buildBreadcrumb", () => {
     const result = parseMarkdown(fixturePath("sample.md"));
 
     test("top-level section breadcrumb is just the title", () => {
-        const s = findSection(result, "1")!;
+        const s = findSection(result, "1") as Section;
         expect(buildBreadcrumb(s)).toBe("Project Overview");
     });
 
     test("nested section has full breadcrumb", () => {
-        const s = findSection(result, "1.1.1")!;
-        expect(buildBreadcrumb(s)).toBe(
-            "Project Overview > Getting Started > Installation",
-        );
+        const s = findSection(result, "1.1.1") as Section;
+        expect(buildBreadcrumb(s)).toBe("Project Overview > Getting Started > Installation");
     });
 });
 
@@ -148,13 +144,9 @@ describe("Context-aware parsing: Code blocks", () => {
 
     test("assigns correct IDs when code blocks are present", () => {
         expect(result.sections[0].title).toBe("Section 1: Basic Code Block");
-        expect(result.sections[1].title).toBe(
-            "Section 2: Code Block with Language",
-        );
+        expect(result.sections[1].title).toBe("Section 2: Code Block with Language");
         expect(result.sections[2].title).toBe("Section 3: TypeScript Example");
-        expect(result.sections[3].title).toBe(
-            "Section 4: Multiple Code Blocks",
-        );
+        expect(result.sections[3].title).toBe("Section 4: Multiple Code Blocks");
     });
 
     test("section content includes code block content", () => {

@@ -1,10 +1,10 @@
-import * as path from "path";
-import { ParseResult } from "../types";
-import { findSection, buildBreadcrumb } from "../parser";
+import * as path from "node:path";
+import { buildBreadcrumb, findSection } from "../parser";
+import type { ParseResult } from "../types";
 
 /** read コマンドのオプション。 */
 export interface ReadOptions {
-  path: string;
+    path: string;
 }
 
 /**
@@ -14,30 +14,30 @@ export interface ReadOptions {
  * パンくずリストを含むメタデータブロックとともに出力します。
  */
 export function runRead(result: ParseResult, options: ReadOptions): void {
-  const section = findSection(result, options.path);
-  if (!section) {
-    console.error(`Error: Section "${options.path}" not found.`);
-    process.exit(1);
-  }
+    const section = findSection(result, options.path);
+    if (!section) {
+        console.error(`Error: Section "${options.path}" not found.`);
+        process.exit(1);
+    }
 
-  const filename = path.basename(result.filePath);
-  const breadcrumb = buildBreadcrumb(section);
+    const filename = path.basename(result.filePath);
+    const breadcrumb = buildBreadcrumb(section);
 
-  // メタデータヘッダー
-  console.log("---");
-  console.log(`Source: ${filename}`);
-  console.log(`Path: ${section.id}`);
-  console.log(`Context: ${breadcrumb}`);
-  console.log("---");
-  console.log("");
-
-  // セクション見出し
-  const hashes = "#".repeat(section.level);
-  console.log(`${hashes} ${section.title}`);
-
-  // セクション本文
-  if (section.content) {
+    // メタデータヘッダー
+    console.log("---");
+    console.log(`Source: ${filename}`);
+    console.log(`Path: ${section.id}`);
+    console.log(`Context: ${breadcrumb}`);
+    console.log("---");
     console.log("");
-    console.log(section.content);
-  }
+
+    // セクション見出し
+    const hashes = "#".repeat(section.level);
+    console.log(`${hashes} ${section.title}`);
+
+    // セクション本文
+    if (section.content) {
+        console.log("");
+        console.log(section.content);
+    }
 }

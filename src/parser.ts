@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as path from "path";
-import { Section, ParseResult } from "./types";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import type { ParseResult, Section } from "./types";
 
 /** 自動生成サマリーの最大文字数。 */
 const AUTO_SUMMARY_LENGTH = 50;
@@ -195,8 +195,7 @@ function extractSummary(contentLines: string[]): string {
             continue;
         }
         return (
-            plain.slice(0, AUTO_SUMMARY_LENGTH) +
-            (plain.length > AUTO_SUMMARY_LENGTH ? "..." : "")
+            plain.slice(0, AUTO_SUMMARY_LENGTH) + (plain.length > AUTO_SUMMARY_LENGTH ? "..." : "")
         );
     }
 
@@ -208,9 +207,7 @@ function extractSummary(contentLines: string[]): string {
  */
 function buildContent(contentLines: string[]): string {
     // サマリーコメント行を表示コンテンツから除外する。
-    const filtered = contentLines.filter(
-        (l) => !SUMMARY_COMMENT_RE.test(l.trim()),
-    );
+    const filtered = contentLines.filter((l) => !SUMMARY_COMMENT_RE.test(l.trim()));
     // 先頭・末尾の空行を除去する。
     let start = 0;
     let end = filtered.length;
@@ -227,10 +224,7 @@ function buildContent(contentLines: string[]): string {
  * 解析結果の中からIDでセクションを検索します。
  * 見つからない場合は undefined を返します。
  */
-export function findSection(
-    result: ParseResult,
-    id: string,
-): Section | undefined {
+export function findSection(result: ParseResult, id: string): Section | undefined {
     return findInList(result.sections, id);
 }
 

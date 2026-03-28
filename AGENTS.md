@@ -26,8 +26,11 @@ npm install
 # TypeScript → CommonJS ビルド（出力先: dist/）
 npm run build
 
-# 型チェックのみ（コード生成なし）
+# 型チェック（tsc --noEmit）+ Biome lint チェック
 npm run lint
+
+# コードフォーマット（Biome）
+npm run format
 
 # 全テスト実行
 npm test
@@ -114,7 +117,7 @@ import { Command } from "commander";
 
 ### フォーマット
 
-- **インデント**: スペース2文字
+- **インデント**: スペース4文字
 - **クォート**: ダブルクォート `"` を使用（テンプレートリテラルは必要な場合のみ）
 - **セミコロン**: あり
 - **末尾カンマ**: オブジェクト・配列の末尾要素に付ける
