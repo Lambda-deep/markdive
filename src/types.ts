@@ -19,6 +19,14 @@ export interface Section {
 }
 
 /**
+ * フロントマターのキーと値のマップ。
+ * 値は文字列・数値・真偽値のいずれか。
+ */
+export interface FrontMatter {
+    [key: string]: string | number | boolean;
+}
+
+/**
  * Markdownファイルの解析結果。
  */
 export interface ParseResult {
@@ -26,6 +34,8 @@ export interface ParseResult {
     filePath: string;
     /** トップレベルセクションの配列 */
     sections: Section[];
+    /** YAMLまたはTOMLフロントマター（存在する場合） */
+    frontMatter?: FrontMatter;
 }
 
 /**

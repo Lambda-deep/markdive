@@ -25,9 +25,17 @@ export function runRead(result: ParseResult, options: ReadOptions): void {
 
     // メタデータヘッダー
     console.log("---");
-    console.log(`Source: ${filename}`);
-    console.log(`Path: ${section.id}`);
-    console.log(`Context: ${breadcrumb}`);
+    // フロントマターのキーと値をそのまま表示する
+    if (result.frontMatter && Object.keys(result.frontMatter).length > 0) {
+        for (const [key, value] of Object.entries(result.frontMatter)) {
+            console.log(`${key}: ${value}`);
+        }
+    }
+    // md-dive の固定フィールドはネストして表示する（フロントマターキーとの衝突を避ける）
+    console.log("md-dive:");
+    console.log(`  source: ${filename}`);
+    console.log(`  path: ${section.id}`);
+    console.log(`  context: ${breadcrumb}`);
     console.log("---");
     console.log("");
 
