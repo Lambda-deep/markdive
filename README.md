@@ -9,7 +9,12 @@ AIコーディングエージェントや開発者が、ファイル全体を一
 ## 設計思想
 
 - **段階的開示（Progressive Disclosure）**: まず構造を把握し、必要な箇所だけ掘り下げる
-- **コンテキストの節約（Context Saving）**: 不要な情報を表示せず、トークン消費を抑える
+- **構造的アドレッシング（Structured Addressing）**: 見出し階層とセクションIDを軸に現在地を追跡する
+- **文脈保全（Context Preservation）**: 行単位ではなくセクション単位で読み、周辺文脈の欠落を避ける
+- **軽量・可搬性（Lightweight & Portable）**: 重い依存を増やさず、CLI単体で再現可能な動作を優先する
+- **役割分離（Separation of Concerns）**: 本ツールは読み取り・探索に特化し、編集は他ツールに委譲する
+
+詳細な判断背景は [ADR-0003](docs/adr/0003-agent-skill-integration.md) を参照してください。
 
 ## インストール
 
