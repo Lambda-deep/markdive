@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+
 import { Command } from "commander";
+import { version } from "../package.json";
 import { runDive } from "./commands/dive";
 import { runRead } from "./commands/read";
 import { parseMarkdown } from "./parser";
@@ -9,7 +11,7 @@ const program = new Command();
 program
     .name("markdive")
     .description("AIエージェントと人間のための階層的Markdownナビゲーター")
-    .version("0.2.0");
+    .version(version);
 
 // ---------------------------------------------------------------------------
 // dive
