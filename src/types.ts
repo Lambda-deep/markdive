@@ -46,5 +46,7 @@ export interface SectionJSON {
     level: number;
     title: string;
     summary: string;
+    /** 子セクションが存在するかどうか。depth制限で children が空配列でも true になる場合がある。 */
+    hasChildren: boolean;
     children: SectionJSON[];
 }

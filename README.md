@@ -84,8 +84,8 @@ $ md-dive outline spec.md --json
     "title": "Project Overview",
     "summary": "High-level introduction to the project",
     "children": [
-      { "id": "1.1", "level": 2, "title": "Getting Started", "summary": "How to install and run", "children": [] },
-      { "id": "1.2", "level": 2, "title": "Usage", "summary": "Basic usage instructions.", "children": [] }
+      { "id": "1.1", "level": 2, "title": "Getting Started", "summary": "How to install and run", "hasChildren": true, "children": [] },
+      { "id": "1.2", "level": 2, "title": "Usage", "summary": "Basic usage instructions.", "hasChildren": false, "children": [] }
     ]
   },
   {
@@ -94,7 +94,7 @@ $ md-dive outline spec.md --json
     "title": "API Reference",
     "summary": "The complete API reference.",
     "children": [
-      { "id": "2.1", "level": 2, "title": "Methods", "summary": "List of available methods.", "children": [] }
+      { "id": "2.1", "level": 2, "title": "Methods", "summary": "List of available methods.", "hasChildren": false, "children": [] }
     ]
   }
 ]
@@ -140,6 +140,7 @@ $ md-dive inspect spec.md --path "1" --json
       "level": 2,
       "title": "Getting Started",
       "summary": "How to install and run",
+      "hasChildren": true,
       "children": []
     },
     {
@@ -147,6 +148,7 @@ $ md-dive inspect spec.md --path "1" --json
       "level": 2,
       "title": "Usage",
       "summary": "Basic usage instructions.",
+      "hasChildren": false,
       "children": []
     }
   ]
@@ -155,7 +157,7 @@ $ md-dive inspect spec.md --path "1" --json
 
 ### `read <file> --path <id>`
 
-指定したIDのセクション本文を、ソースファイル名・セクションパス・パンくずリストを含むメタデータヘッダーとともに出力します。
+指定したIDのセクションとその子孫セクションすべての本文を、ソースファイル名・セクションパス・パンくずリストを含むメタデータヘッダーとともに出力します。
 
 ```bash
 md-dive read README.md --path "2.1"
@@ -171,14 +173,19 @@ md-dive read README.md --path "2.1"
 
 ```
 ---
-Source: README.md
-Path: 2.1
-Context: 第2章 > セクション2.1
+md-dive:
+  source: README.md
+  path: 2.1
+  context: 第2章 > セクション2.1
 ---
 
 ## セクション2.1
 
 セクションの本文...
+
+### サブセクション2.1.1
+
+サブセクションの本文...
 ```
 
 ## セクションID

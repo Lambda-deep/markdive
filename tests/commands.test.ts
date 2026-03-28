@@ -101,6 +101,28 @@ describe("runOutline – JSON", () => {
         // children of level-2 sections should be empty arrays
         expect(parsed[0].children[0].children).toHaveLength(0);
     });
+
+    test("JSON hasChildren is true when depth limit hides children", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 2, json: true });
+        cap.restore();
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        // 1.1 (Getting Started) has children (1.1.1), but depth=2 hides them
+        expect(parsed[0].children[0].hasChildren).toBe(true);
+        expect(parsed[0].children[0].children).toHaveLength(0);
+    });
+
+    test("JSON hasChildren is false for leaf sections", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 3, json: true });
+        cap.restore();
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        // 1.1.1 (Installation) has no children
+        const installation = parsed[0].children[0].children[0];
+        expect(installation.id).toBe("1.1.1");
+        expect(installation.hasChildren).toBe(false);
+        expect(installation.children).toHaveLength(0);
+    });
 });
 
 // ---------------------------------------------------------------------------

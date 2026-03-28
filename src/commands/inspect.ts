@@ -25,6 +25,7 @@ export function runInspect(result: ParseResult, options: InspectOptions): void {
             level: section.level,
             title: section.title,
             summary: section.summary,
+            hasChildren: section.children.length > 0,
             children: section.children.map(toJSON),
         };
         console.log(JSON.stringify(output, null, 2));
@@ -51,6 +52,7 @@ function toJSON(section: Section): SectionJSON {
         level: section.level,
         title: section.title,
         summary: section.summary,
+        hasChildren: section.children.length > 0,
         children: [],
     };
 }

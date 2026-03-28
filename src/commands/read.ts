@@ -39,13 +39,22 @@ export function runRead(result: ParseResult, options: ReadOptions): void {
     console.log("---");
     console.log("");
 
-    // セクション見出し
+    // セクション以下の全コンテンツを再帰的に出力
+    printSection(section);
+}
+
+/** セクションとその子孫を再帰的に出力するヘルパー。 */
+function printSection(section: import("../types").Section): void {
     const hashes = "#".repeat(section.level);
     console.log(`${hashes} ${section.title}`);
 
-    // セクション本文
     if (section.content) {
         console.log("");
         console.log(section.content);
+    }
+
+    for (const child of section.children) {
+        console.log("");
+        printSection(child);
     }
 }

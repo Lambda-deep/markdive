@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-28
+
+### Added
+
+- `outline` / `inspect` JSON output: added `hasChildren` field to distinguish depth-limited truncation from truly leaf sections
+
+### Changed
+
+- `read` command: now recursively outputs the target section and all its descendant sections
+
 ## [0.1.0] - 2026-03-28
 
 ### Added
@@ -22,5 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Blockquote detection: headings inside `>` blocks are not parsed as sections
 - TypeScript library API re-exported from `src/index.ts`
 
-[Unreleased]: https://github.com/Lambda-deep/md-dive/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Lambda-deep/md-dive/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Lambda-deep/md-dive/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Lambda-deep/md-dive/releases/tag/v0.1.0

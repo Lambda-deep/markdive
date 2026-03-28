@@ -52,6 +52,7 @@ function toJSON(section: Section, maxDepth: number): SectionJSON {
         level: section.level,
         title: section.title,
         summary: section.summary,
+        hasChildren: section.children.length > 0,
         children: section.level < maxDepth ? section.children.map((c) => toJSON(c, maxDepth)) : [],
     };
 }
