@@ -51,6 +51,11 @@ export function parseMarkdown(filePath: string): ParseResult {
             continue;
         }
 
+        // 引用ブロック行（> で始まる行）では見出し検出をスキップ
+        if (trimmed.startsWith(">")) {
+            continue;
+        }
+
         const match = HEADING_RE.exec(line);
         if (match) {
             rawSections.push({

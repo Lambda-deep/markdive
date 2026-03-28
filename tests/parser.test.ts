@@ -182,3 +182,60 @@ describe("Context-aware parsing: Code blocks", () => {
         expect(singleResult.sections).toHaveLength(1);
     });
 });
+
+describe("Context-aware parsing: Blockquotes", () => {
+    const result = parseMarkdown(fixturePath("blockquote.md"));
+
+    test("does not detect headings inside blockquotes", () => {
+        // Should only have 4 top-level sections, not additional from blockquote content
+        expect(result.sections).toHaveLength(4);
+        expect(result.sections[0].id).toBe("1");
+        expect(result.sections[1].id).toBe("2");
+        expect(result.sections[2].id).toBe("3");
+        expect(result.sections[3].id).toBe("4");
+    });
+
+    test("assigns correct titles to sections", () => {
+        expect(result.sections[0].title).toBe("Section Before Blockquote");
+        expect(result.sections[1].title).toBe("Section After Blockquote");
+        expect(result.sections[2].title).toBe("Section With Mixed Blockquote and Code");
+        expect(result.sections[3].title).toBe("Section After All");
+    });
+
+    test("blockquote content is included in the parent section content", () => {
+        const section1 = result.sections[0];
+        // The blockquote lines should be in the content of Section 1
+        expect(section1.content).toContain("> # This is NOT a heading (blockquote level 1)");
+    });
+
+    test("ignores nested blockquote headings (>> and >>>)", () => {
+        // Subsection should only have 0 children (the nested blockquotes are not parsed as sections)
+        const section2 = result.sections[1];
+        expect(section2.children).toHaveLength(1);
+        const subsection = section2.children[0];
+        expect(subsection.title).toBe("Subsection with Nested Blockquote");
+        expect(subsection.children).toHaveLength(0);
+    });
+
+    test("IDs remain sequential after blockquotes", () => {
+        // IDs should be 1, 2, 3, 4 without gaps caused by false blockquote headings
+        expect(result.sections[0].id).toBe("1");
+        expect(result.sections[1].id).toBe("2");
+        expect(result.sections[2].id).toBe("3");
+        expect(result.sections[3].id).toBe("4");
+    });
+
+    test("no false subsections created from blockquote lines", () => {
+        // Section 1 should have no children (the > ## line is NOT a subsection)
+        expect(result.sections[0].children).toHaveLength(0);
+    });
+
+    test("existing fixtures still parse correctly (regression test)", () => {
+        const sampleResult = parseMarkdown(fixturePath("sample.md"));
+        expect(sampleResult.sections).toHaveLength(2);
+        expect(sampleResult.sections[0].id).toBe("1");
+
+        const codeblockResult = parseMarkdown(fixturePath("codeblock.md"));
+        expect(codeblockResult.sections).toHaveLength(4);
+    });
+});
