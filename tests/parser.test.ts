@@ -239,3 +239,45 @@ describe("Context-aware parsing: Blockquotes", () => {
         expect(codeblockResult.sections).toHaveLength(4);
     });
 });
+
+// ---------------------------------------------------------------------------
+// Front matter parsing
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – frontmatter.md (YAML front matter)", () => {
+    const result = parseMarkdown(fixturePath("frontmatter.md"));
+
+    test("frontMatter is defined", () => {
+        expect(result.frontMatter).toBeDefined();
+    });
+
+    test("parses string values", () => {
+        expect(result.frontMatter?.title).toBe("Installation Guide");
+        expect(result.frontMatter?.author).toBe("Lambda-deep");
+    });
+
+    test("parses numeric values", () => {
+        expect(result.frontMatter?.version).toBe(2);
+    });
+
+    test("parses boolean values", () => {
+        expect(result.frontMatter?.draft).toBe(false);
+    });
+
+    test("does not include front matter lines as section content", () => {
+        // Sections should start after the front matter block
+        expect(result.sections).toHaveLength(1);
+        expect(result.sections[0].title).toBe("Installation Guide");
+    });
+
+    test("sections have correct IDs after front matter", () => {
+        expect(result.sections[0].id).toBe("1");
+        expect(result.sections[0].children[0].id).toBe("1.1");
+    });
+});
+
+describe("parseMarkdown – sample.md (no front matter)", () => {
+    test("frontMatter is undefined when file has no front matter", () => {
+        const result = parseMarkdown(fixturePath("sample.md"));
+        expect(result.frontMatter).toBeUndefined();
+    });
+});

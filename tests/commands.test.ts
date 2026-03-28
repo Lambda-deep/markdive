@@ -124,14 +124,15 @@ describe("runInspect – JSON", () => {
 describe("runRead", () => {
     const result = parseMarkdown(fixturePath("sample.md"));
 
-    test("outputs metadata header", () => {
+    test("outputs metadata header with nested md-dive block", () => {
         const cap = captureConsole();
         runRead(result, { path: "1.1.1" });
         cap.restore();
         const output = cap.lines.join("\n");
-        expect(output).toContain("Source: sample.md");
-        expect(output).toContain("Path: 1.1.1");
-        expect(output).toContain("Context: Project Overview > Getting Started > Installation");
+        expect(output).toContain("md-dive:");
+        expect(output).toContain("  source: sample.md");
+        expect(output).toContain("  path: 1.1.1");
+        expect(output).toContain("  context: Project Overview > Getting Started > Installation");
     });
 
     test("outputs section heading and content", () => {
@@ -148,6 +149,96 @@ describe("runRead", () => {
         runRead(result, { path: "1" });
         cap.restore();
         const output = cap.lines.join("\n");
-        expect(output).toContain("Context: Project Overview");
+        expect(output).toContain("  context: Project Overview");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Front matter display
+// ---------------------------------------------------------------------------
+describe("runOutline – front matter display", () => {
+    const result = parseMarkdown(fixturePath("frontmatter.md"));
+
+    test("front matter block is printed before sections", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 2, json: false });
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("title: Installation Guide");
+        expect(output).toContain("author: Lambda-deep");
+        expect(output).toContain("version: 2");
+        expect(output).toContain("draft: false");
+    });
+
+    test("front matter delimiters are printed", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 2, json: false });
+        cap.restore();
+        // First and last line of the front matter block should be ---
+        const idx = cap.lines.indexOf("---");
+        expect(idx).toBe(0);
+    });
+
+    test("sections are printed after front matter block", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 2, json: false });
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("1: Installation Guide");
+    });
+
+    test("JSON output is not affected by front matter", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 2, json: true });
+        cap.restore();
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        expect(Array.isArray(parsed)).toBe(true);
+        expect(parsed[0].id).toBe("1");
+    });
+});
+
+describe("runRead – front matter in metadata header", () => {
+    const result = parseMarkdown(fixturePath("frontmatter.md"));
+
+    test("front matter keys appear verbatim before md-dive block", () => {
+        const cap = captureConsole();
+        runRead(result, { path: "1" });
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("title: Installation Guide");
+        expect(output).toContain("author: Lambda-deep");
+    });
+
+    test("md-dive nested block contains source/path/context", () => {
+        const cap = captureConsole();
+        runRead(result, { path: "1" });
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("md-dive:");
+        expect(output).toContain("  source: frontmatter.md");
+        expect(output).toContain("  path: 1");
+        expect(output).toContain("  context: Installation Guide");
+    });
+
+    test("no collision: front matter keys do not duplicate md-dive fields", () => {
+        const cap = captureConsole();
+        runRead(result, { path: "1" });
+        cap.restore();
+        // "source:"/"path:"/"context:" at top-level should NOT appear (only indented under md-dive:)
+        const topLevelConflicts = cap.lines.filter((l) => /^(source|path|context):/.test(l));
+        expect(topLevelConflicts).toHaveLength(0);
+    });
+
+    test("no front matter section when file has none", () => {
+        const sampleResult = parseMarkdown(fixturePath("sample.md"));
+        const cap = captureConsole();
+        runRead(sampleResult, { path: "1" });
+        cap.restore();
+        // Only md-dive: block and --- delimiters should appear before the section content
+        const headerEnd = cap.lines.lastIndexOf("---");
+        const headerContent = cap.lines.slice(1, headerEnd);
+        // Should be exactly: "md-dive:", "  source: ...", "  path: ...", "  context: ..."
+        expect(headerContent).toHaveLength(4);
+        expect(headerContent[0]).toBe("md-dive:");
     });
 });

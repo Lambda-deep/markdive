@@ -16,6 +16,14 @@ export function runOutline(result: ParseResult, options: OutlineOptions): void {
         const output = result.sections.map((s) => toJSON(s, options.depth));
         console.log(JSON.stringify(output, null, 2));
     } else {
+        // フロントマターが存在する場合は先頭に表示する
+        if (result.frontMatter && Object.keys(result.frontMatter).length > 0) {
+            console.log("---");
+            for (const [key, value] of Object.entries(result.frontMatter)) {
+                console.log(`${key}: ${value}`);
+            }
+            console.log("---");
+        }
         printSections(result.sections, options.depth, 0);
     }
 }

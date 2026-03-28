@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { ParseResult, Section } from "./types";
+import type { FrontMatter, ParseResult, Section } from "./types";
 
 /** 自動生成サマリーの最大文字数。 */
 const AUTO_SUMMARY_LENGTH = 50;
@@ -23,6 +23,22 @@ export function parseMarkdown(filePath: string): ParseResult {
     const lines = raw.replace(/\r\n/g, "\n").split("\n"); // Normalize line endings
 
     // -----------------------------------------------------------------------
+    // フロントマター検出とパース
+    // -----------------------------------------------------------------------
+    let contentStartLine = 0;
+    const frontMatter = parseFrontMatter(lines);
+    if (frontMatter !== undefined) {
+        // フロントマターブロックの終端（2番目の区切り行）の次の行から本文開始
+        const delimiter = lines[0].trim();
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim() === delimiter) {
+                contentStartLine = i + 1;
+                break;
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // パス1: 見出しの位置と本文行を収集する
     // -----------------------------------------------------------------------
     interface RawSection {
@@ -36,7 +52,7 @@ export function parseMarkdown(filePath: string): ParseResult {
     const rawSections: RawSection[] = [];
     let inCodeBlock = false; // コードブロック内にいるかどうかを追跡
 
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = contentStartLine; i < lines.length; i++) {
         const line = lines[i];
         const trimmed = line.trim();
 
@@ -151,7 +167,7 @@ export function parseMarkdown(filePath: string): ParseResult {
         }
     }
 
-    return { filePath: absolutePath, sections: roots };
+    return { filePath: absolutePath, sections: roots, frontMatter };
 }
 
 // ---------------------------------------------------------------------------
@@ -254,4 +270,68 @@ export function buildBreadcrumb(section: Section): string {
         current = current.parent;
     }
     return parts.join(" > ");
+}
+
+// ---------------------------------------------------------------------------
+// フロントマターパーサー
+// ---------------------------------------------------------------------------
+
+/**
+ * ファイル先頭の YAML (`---`) または TOML (`+++`) フロントマターをパースします。
+ *
+ * - フロントマターが存在する場合は `FrontMatter` オブジェクトを返す。
+ * - 存在しない場合は `undefined` を返す。
+ * - 外部ライブラリを使用せず、シンプルな `key: value` / `key = value` を解析する。
+ */
+function parseFrontMatter(lines: string[]): FrontMatter | undefined {
+    if (lines.length < 2) {
+        return undefined;
+    }
+
+    const firstLine = lines[0].trim();
+    const isYaml = firstLine === "---";
+    const isToml = firstLine === "+++";
+
+    if (!isYaml && !isToml) {
+        return undefined;
+    }
+
+    const separator = firstLine;
+    const result: FrontMatter = {};
+
+    for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === separator) {
+            // 閉じ区切り行が見つかった → パース成功
+            return result;
+        }
+        // key: value (YAML) または key = value (TOML) を解析
+        const yamlMatch = /^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$/.exec(lines[i]);
+        const tomlMatch = /^([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(.*)$/.exec(lines[i]);
+        const match = isYaml ? yamlMatch : tomlMatch;
+        if (match) {
+            const key = match[1].trim();
+            const rawValue = match[2].trim();
+            result[key] = parseScalar(rawValue);
+        }
+        // コメント行・空行・配列・ネスト構造はスキップする
+    }
+
+    // 閉じ区切り行が見つからなかった場合はフロントマターとして扱わない
+    return undefined;
+}
+
+/**
+ * YAML/TOML のスカラー値文字列を適切な JS プリミティブに変換します。
+ */
+function parseScalar(raw: string): string | number | boolean {
+    if (raw === "true") return true;
+    if (raw === "false") return false;
+    // クォートを除去
+    if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+        return raw.slice(1, -1);
+    }
+    // 整数または浮動小数点
+    const num = Number(raw);
+    if (raw !== "" && !Number.isNaN(num)) return num;
+    return raw;
 }
