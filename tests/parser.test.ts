@@ -281,3 +281,169 @@ describe("parseMarkdown – sample.md (no front matter)", () => {
         expect(result.frontMatter).toBeUndefined();
     });
 });
+
+// ---------------------------------------------------------------------------
+// Edge case: empty file
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – empty.md", () => {
+    const result = parseMarkdown(fixturePath("empty.md"));
+
+    test("returns empty sections array", () => {
+        expect(result.sections).toHaveLength(0);
+    });
+
+    test("frontMatter is undefined", () => {
+        expect(result.frontMatter).toBeUndefined();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: file with no headings (text only)
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – noheadings.md", () => {
+    const result = parseMarkdown(fixturePath("noheadings.md"));
+
+    test("returns empty sections array when no headings are present", () => {
+        expect(result.sections).toHaveLength(0);
+    });
+
+    test("frontMatter is undefined", () => {
+        expect(result.frontMatter).toBeUndefined();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: skipped heading level (orphan section)
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – skipped-level.md (orphan section)", () => {
+    const result = parseMarkdown(fixturePath("skipped-level.md"));
+
+    test("orphan section (h3 with no h2 parent) becomes a root section", () => {
+        expect(result.sections).toHaveLength(2);
+        expect(result.sections[1].id).toBe("1.0.1");
+        expect(result.sections[1].parent).toBeNull();
+    });
+
+    test("orphan section retains its original level", () => {
+        expect(result.sections[1].level).toBe(3);
+        expect(result.sections[1].title).toBe("Orphan Section");
+    });
+
+    test("top-level section has no children due to skipped level", () => {
+        expect(result.sections[0].children).toHaveLength(0);
+    });
+
+    test("orphan section has its own content", () => {
+        expect(result.sections[1].content).toContain("Content of orphan section.");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: sections with no body content (adjacent headings)
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – no-content.md (empty sections)", () => {
+    const result = parseMarkdown(fixturePath("no-content.md"));
+
+    test("sections with no body content have empty content string", () => {
+        expect(result.sections[0].content).toBe("");
+        expect(findSection(result, "1.1")?.content).toBe("");
+        expect(findSection(result, "1.1.1")?.content).toBe("");
+        expect(result.sections[1].content).toBe("");
+    });
+
+    test("sections with no body content have empty summary", () => {
+        expect(result.sections[0].summary).toBe("");
+        expect(result.sections[1].summary).toBe("");
+    });
+
+    test("hierarchy is preserved even with no body content", () => {
+        expect(result.sections).toHaveLength(2);
+        expect(result.sections[0].id).toBe("1");
+        expect(result.sections[0].children[0].id).toBe("1.1");
+        expect(result.sections[0].children[0].children[0].id).toBe("1.1.1");
+        expect(result.sections[1].id).toBe("2");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: heading levels h4, h5, h6
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – h456.md (heading levels 4-6)", () => {
+    const result = parseMarkdown(fixturePath("h456.md"));
+
+    test("h4 has correct id and level", () => {
+        const s = findSection(result, "1.1.1.1");
+        expect(s).toBeDefined();
+        expect(s?.level).toBe(4);
+        expect(s?.title).toBe("H4");
+    });
+
+    test("h5 has correct id and level", () => {
+        const s = findSection(result, "1.1.1.1.1");
+        expect(s).toBeDefined();
+        expect(s?.level).toBe(5);
+        expect(s?.title).toBe("H5");
+    });
+
+    test("h6 has correct id and level", () => {
+        const s = findSection(result, "1.1.1.1.1.1");
+        expect(s).toBeDefined();
+        expect(s?.level).toBe(6);
+        expect(s?.title).toBe("H6");
+    });
+
+    test("h6 parent is h5", () => {
+        const h6 = findSection(result, "1.1.1.1.1.1");
+        expect(h6?.parent?.id).toBe("1.1.1.1.1");
+    });
+
+    test("h4-h6 sections have no children", () => {
+        expect(findSection(result, "1.1.1.1")?.children).toHaveLength(1);
+        expect(findSection(result, "1.1.1.1.1")?.children).toHaveLength(1);
+        expect(findSection(result, "1.1.1.1.1.1")?.children).toHaveLength(0);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: summary comment edge cases
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – summary-edge.md", () => {
+    const result = parseMarkdown(fixturePath("summary-edge.md"));
+
+    test("empty summary comment results in empty string summary", () => {
+        expect(result.sections[0].summary).toBe("");
+    });
+
+    test("content is still available when summary comment is empty", () => {
+        expect(result.sections[0].content).toContain("Fallback text");
+    });
+
+    test("first of multiple summary comments is used", () => {
+        expect(result.sections[1].summary).toBe("First summary here");
+    });
+
+    test("second summary comment is ignored", () => {
+        expect(result.sections[1].summary).not.toBe("Second comment should be ignored");
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: text before the first heading (pre-section text)
+// ---------------------------------------------------------------------------
+describe("parseMarkdown – presection.md (text before first heading)", () => {
+    const result = parseMarkdown(fixturePath("presection.md"));
+
+    test("only one section is created from the heading", () => {
+        expect(result.sections).toHaveLength(1);
+        expect(result.sections[0].title).toBe("First Section");
+    });
+
+    test("text before the first heading is not included in any section content", () => {
+        expect(result.sections[0].content).not.toContain("before any heading");
+        expect(result.sections[0].content).not.toContain("should not be included");
+    });
+
+    test("section content contains only post-heading text", () => {
+        expect(result.sections[0].content).toContain("Content of first section.");
+    });
+});

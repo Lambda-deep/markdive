@@ -213,3 +213,7 @@ const fixturePath = (name: string) => path.join(__dirname, "fixtures", name);
 7. `npm run lint` で型エラーがないことを確認する
 8. `npm test` で全テストが通ることを確認する
 9. `npm run build` でビルドが成功することを確認する
+
+## ドキュメントについて
+- ドキュメントは Markdown 形式で `docs/` ディレクトリに配置する
+- プロジェクトのアーキテクチャに関する議論があった際にはADR（Architectural Decision Records）を `docs/adr/` に配置する。作成にあたってはSkill:`/architecture-decision-records`を利用すること。

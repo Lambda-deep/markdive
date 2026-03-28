@@ -24,7 +24,7 @@ export function runOutline(result: ParseResult, options: OutlineOptions): void {
             }
             console.log("---");
         }
-        printSections(result.sections, options.depth, 0);
+        printSections(result.sections, options.depth);
     }
 }
 
@@ -32,16 +32,16 @@ export function runOutline(result: ParseResult, options: OutlineOptions): void {
 // ユーティリティ関数
 // ---------------------------------------------------------------------------
 
-function printSections(sections: Section[], maxDepth: number, indent: number): void {
+function printSections(sections: Section[], maxDepth: number): void {
     for (const section of sections) {
         if (section.level > maxDepth) {
             continue;
         }
-        const prefix = "  ".repeat(indent);
+        const prefix = "  ".repeat(section.level - 1);
         const summaryPart = section.summary ? ` — ${section.summary}` : "";
         console.log(`${prefix}${section.id}: ${section.title}${summaryPart}`);
         if (section.children.length > 0) {
-            printSections(section.children, maxDepth, indent + 1);
+            printSections(section.children, maxDepth);
         }
     }
 }

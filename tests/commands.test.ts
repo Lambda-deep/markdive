@@ -55,6 +55,29 @@ describe("runOutline – text", () => {
     });
 });
 
+describe("runOutline – orphan section indentation", () => {
+    const result = parseMarkdown(fixturePath("skipped-level.md"));
+
+    test("orphan section (level 3) is indented by 2 levels", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 3, json: false });
+        cap.restore();
+        // level-3 orphan section should have 4 spaces (2 * (3-1)) of indent
+        const orphanLine = cap.lines.find((l) => l.includes("Orphan Section"));
+        expect(orphanLine).toBeDefined();
+        expect(orphanLine).toMatch(/^ {4}/);
+    });
+
+    test("top-level section (level 1) has no indent", () => {
+        const cap = captureConsole();
+        runOutline(result, { depth: 3, json: false });
+        cap.restore();
+        const topLine = cap.lines.find((l) => l.includes("Top Level"));
+        expect(topLine).toBeDefined();
+        expect(topLine).toMatch(/^1:/);
+    });
+});
+
 describe("runOutline – JSON", () => {
     const result = parseMarkdown(fixturePath("sample.md"));
 
