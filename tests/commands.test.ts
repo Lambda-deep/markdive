@@ -1,6 +1,5 @@
 import * as path from "node:path";
-import { runInspect } from "../src/commands/inspect";
-import { runOutline } from "../src/commands/outline";
+import { runDive } from "../src/commands/dive";
 import { runRead } from "../src/commands/read";
 import { parseMarkdown } from "../src/parser";
 
@@ -22,14 +21,14 @@ function captureConsole(): { lines: string[]; restore: () => void } {
 }
 
 // ---------------------------------------------------------------------------
-// outline
+// dive
 // ---------------------------------------------------------------------------
-describe("runOutline – text", () => {
+describe("runDive – text", () => {
     const result = parseMarkdown(fixturePath("sample.md"));
 
-    test("default depth 2 includes levels 1 and 2", () => {
+    test("root + default depth 2 includes levels 1 and 2", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: false });
+        runDive(result, { depth: 2, json: false });
         cap.restore();
         const output = cap.lines.join("\n");
         expect(output).toContain("1: Project Overview");
@@ -38,29 +37,49 @@ describe("runOutline – text", () => {
         expect(output).not.toContain("1.1.1:");
     });
 
-    test("depth 3 includes level 3", () => {
+    test("root + depth 3 includes level 3", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 3, json: false });
+        runDive(result, { depth: 3, json: false });
         cap.restore();
         const output = cap.lines.join("\n");
         expect(output).toContain("1.1.1: Installation");
     });
 
-    test("summary is included in text output", () => {
+    test("summary is included in root text output", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: false });
+        runDive(result, { depth: 2, json: false });
         cap.restore();
         const output = cap.lines.join("\n");
         expect(output).toContain("High-level introduction to the project");
     });
+
+    test("path only defaults to depth 1 (shows direct children)", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "1", depth: 1, json: false });
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("1: Project Overview");
+        expect(output).toContain("1.1: Getting Started");
+        expect(output).toContain("1.2: Usage");
+        expect(output).not.toContain("1.1.1: Installation");
+    });
+
+    test("path + depth 2 includes grandchildren", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "1", depth: 2, json: false });
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("1.1.1: Installation");
+        expect(output).toContain("1.2.2: Advanced Example");
+    });
 });
 
-describe("runOutline – orphan section indentation", () => {
+describe("runDive – orphan section indentation", () => {
     const result = parseMarkdown(fixturePath("skipped-level.md"));
 
     test("orphan section (level 3) is indented by 2 levels", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 3, json: false });
+        runDive(result, { depth: 3, json: false });
         cap.restore();
         // level-3 orphan section should have 4 spaces (2 * (3-1)) of indent
         const orphanLine = cap.lines.find((l) => l.includes("Orphan Section"));
@@ -70,7 +89,7 @@ describe("runOutline – orphan section indentation", () => {
 
     test("top-level section (level 1) has no indent", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 3, json: false });
+        runDive(result, { depth: 3, json: false });
         cap.restore();
         const topLine = cap.lines.find((l) => l.includes("Top Level"));
         expect(topLine).toBeDefined();
@@ -78,12 +97,12 @@ describe("runOutline – orphan section indentation", () => {
     });
 });
 
-describe("runOutline – JSON", () => {
+describe("runDive – JSON", () => {
     const result = parseMarkdown(fixturePath("sample.md"));
 
-    test("JSON output is parseable and has correct structure", () => {
+    test("root JSON output is parseable and has correct structure", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: true });
+        runDive(result, { depth: 2, json: true });
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
         expect(Array.isArray(parsed)).toBe(true);
@@ -93,18 +112,18 @@ describe("runOutline – JSON", () => {
         expect(parsed[0].children[0].id).toBe("1.1");
     });
 
-    test("JSON depth=2 does not include level-3 children", () => {
+    test("root JSON depth=2 does not include level-3 children", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: true });
+        runDive(result, { depth: 2, json: true });
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
         // children of level-2 sections should be empty arrays
         expect(parsed[0].children[0].children).toHaveLength(0);
     });
 
-    test("JSON hasChildren is true when depth limit hides children", () => {
+    test("root JSON hasChildren is true when depth limit hides children", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: true });
+        runDive(result, { depth: 2, json: true });
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
         // 1.1 (Getting Started) has children (1.1.1), but depth=2 hides them
@@ -112,9 +131,9 @@ describe("runOutline – JSON", () => {
         expect(parsed[0].children[0].children).toHaveLength(0);
     });
 
-    test("JSON hasChildren is false for leaf sections", () => {
+    test("root JSON hasChildren is false for leaf sections", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 3, json: true });
+        runDive(result, { depth: 3, json: true });
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
         // 1.1.1 (Installation) has no children
@@ -123,43 +142,25 @@ describe("runOutline – JSON", () => {
         expect(installation.hasChildren).toBe(false);
         expect(installation.children).toHaveLength(0);
     });
-});
-
-// ---------------------------------------------------------------------------
-// inspect
-// ---------------------------------------------------------------------------
-describe("runInspect – text", () => {
-    const result = parseMarkdown(fixturePath("sample.md"));
-
-    test("shows children of a section", () => {
+    test("path JSON returns a single section object", () => {
         const cap = captureConsole();
-        runInspect(result, { path: "1", json: false });
-        cap.restore();
-        const output = cap.lines.join("\n");
-        expect(output).toContain("1.1: Getting Started");
-        expect(output).toContain("1.2: Usage");
-    });
-
-    test("leaf section reports no sub-sections", () => {
-        const cap = captureConsole();
-        runInspect(result, { path: "1.1.1", json: false });
-        cap.restore();
-        const output = cap.lines.join("\n");
-        expect(output).toContain("has no sub-sections");
-    });
-});
-
-describe("runInspect – JSON", () => {
-    const result = parseMarkdown(fixturePath("sample.md"));
-
-    test("JSON includes parent and children", () => {
-        const cap = captureConsole();
-        runInspect(result, { path: "1", json: true });
+        runDive(result, { path: "1", depth: 1, json: true });
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
+        expect(Array.isArray(parsed)).toBe(false);
         expect(parsed.id).toBe("1");
         expect(parsed.children).toHaveLength(2);
         expect(parsed.children[0].id).toBe("1.1");
+    });
+
+    test("path JSON depth=1 hides grandchildren but keeps hasChildren", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "1", depth: 1, json: true });
+        cap.restore();
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        expect(parsed.children[0].id).toBe("1.1");
+        expect(parsed.children[0].hasChildren).toBe(true);
+        expect(parsed.children[0].children).toHaveLength(0);
     });
 });
 
@@ -169,12 +170,12 @@ describe("runInspect – JSON", () => {
 describe("runRead", () => {
     const result = parseMarkdown(fixturePath("sample.md"));
 
-    test("outputs metadata header with nested md-dive block", () => {
+    test("outputs metadata header with nested markdive block", () => {
         const cap = captureConsole();
         runRead(result, { path: "1.1.1" });
         cap.restore();
         const output = cap.lines.join("\n");
-        expect(output).toContain("md-dive:");
+        expect(output).toContain("markdive:");
         expect(output).toContain("  source: sample.md");
         expect(output).toContain("  path: 1.1.1");
         expect(output).toContain("  context: Project Overview > Getting Started > Installation");
@@ -201,12 +202,12 @@ describe("runRead", () => {
 // ---------------------------------------------------------------------------
 // Front matter display
 // ---------------------------------------------------------------------------
-describe("runOutline – front matter display", () => {
+describe("runDive – front matter display", () => {
     const result = parseMarkdown(fixturePath("frontmatter.md"));
 
     test("front matter block is printed before sections", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: false });
+        runDive(result, { depth: 2, json: false });
         cap.restore();
         const output = cap.lines.join("\n");
         expect(output).toContain("title: Installation Guide");
@@ -217,7 +218,7 @@ describe("runOutline – front matter display", () => {
 
     test("front matter delimiters are printed", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: false });
+        runDive(result, { depth: 2, json: false });
         cap.restore();
         // First and last line of the front matter block should be ---
         const idx = cap.lines.indexOf("---");
@@ -226,7 +227,7 @@ describe("runOutline – front matter display", () => {
 
     test("sections are printed after front matter block", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: false });
+        runDive(result, { depth: 2, json: false });
         cap.restore();
         const output = cap.lines.join("\n");
         expect(output).toContain("1: Installation Guide");
@@ -234,7 +235,7 @@ describe("runOutline – front matter display", () => {
 
     test("JSON output is not affected by front matter", () => {
         const cap = captureConsole();
-        runOutline(result, { depth: 2, json: true });
+        runDive(result, { depth: 2, json: true });
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
         expect(Array.isArray(parsed)).toBe(true);
@@ -254,12 +255,12 @@ describe("runRead – front matter in metadata header", () => {
         expect(output).toContain("author: Lambda-deep");
     });
 
-    test("md-dive nested block contains source/path/context", () => {
+    test("markdive nested block contains source/path/context", () => {
         const cap = captureConsole();
         runRead(result, { path: "1" });
         cap.restore();
         const output = cap.lines.join("\n");
-        expect(output).toContain("md-dive:");
+        expect(output).toContain("markdive:");
         expect(output).toContain("  source: frontmatter.md");
         expect(output).toContain("  path: 1");
         expect(output).toContain("  context: Installation Guide");
@@ -279,11 +280,11 @@ describe("runRead – front matter in metadata header", () => {
         const cap = captureConsole();
         runRead(sampleResult, { path: "1" });
         cap.restore();
-        // Only md-dive: block and --- delimiters should appear before the section content
+        // Only markdive: block and --- delimiters should appear before the section content
         const headerEnd = cap.lines.lastIndexOf("---");
         const headerContent = cap.lines.slice(1, headerEnd);
         // Should be exactly: "md-dive:", "  source: ...", "  path: ...", "  context: ..."
         expect(headerContent).toHaveLength(4);
-        expect(headerContent[0]).toBe("md-dive:");
+        expect(headerContent[0]).toBe("markdive:");
     });
 });

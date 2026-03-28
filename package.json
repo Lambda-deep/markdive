@@ -1,16 +1,16 @@
 {
-    "name": "md-dive",
-    "version": "0.2.0",
+    "name": "markdive",
+    "version": "0.3.0",
     "description": "A CLI tool for hierarchical navigation of large Markdown files",
     "author": "Lambda-deep (https://github.com/Lambda-deep)",
     "license": "MIT",
-    "homepage": "https://github.com/Lambda-deep/md-dive#readme",
+    "homepage": "https://github.com/Lambda-deep/markdive#readme",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Lambda-deep/md-dive.git"
+        "url": "git+https://github.com/Lambda-deep/markdive.git"
     },
     "bugs": {
-        "url": "https://github.com/Lambda-deep/md-dive/issues"
+        "url": "https://github.com/Lambda-deep/markdive/issues"
     },
     "keywords": [
         "markdown",
@@ -22,7 +22,7 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "bin": {
-        "md-dive": "dist/cli.js"
+        "markdive": "dist/cli.js"
     },
     "files": [
         "dist/",

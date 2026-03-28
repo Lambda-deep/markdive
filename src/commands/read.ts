@@ -31,8 +31,8 @@ export function runRead(result: ParseResult, options: ReadOptions): void {
             console.log(`${key}: ${value}`);
         }
     }
-    // md-dive の固定フィールドはネストして表示する（フロントマターキーとの衝突を避ける）
-    console.log("md-dive:");
+    // markdive の固定フィールドはネストして表示する（フロントマターキーとの衝突を避ける）
+    console.log("markdive:");
     console.log(`  source: ${filename}`);
     console.log(`  path: ${section.id}`);
     console.log(`  context: ${breadcrumb}`);

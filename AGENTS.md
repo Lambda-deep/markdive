@@ -1,4 +1,4 @@
-# AGENTS.md — md-dive コーディングエージェント向けガイド
+# AGENTS.md — markdive コーディングエージェント向けガイド
 
 このファイルはエージェント（および人間の開発者）が本リポジトリで作業する際の
 参照ドキュメントです。`.github/copilot-instructions.md` の内容を統合・拡充しています。
@@ -9,7 +9,7 @@
 
 ## プロジェクト概要
 
-**md-dive** は大規模 Markdown ファイルを階層的にナビゲートするための TypeScript 製 CLI ツールです。
+**markdive** は大規模 Markdown ファイルを階層的にナビゲートするための TypeScript 製 CLI ツールです。
 AIエージェントと人間の双方が大きな文書を効率よく閲覧することを目的としています。
 
 ### 設計思想
@@ -60,8 +60,7 @@ npx jest --watch
 | ------------------------- | ----------------------------------------------------------------- |
 | `src/types.ts`            | 共有 TypeScript 型定義（`Section`, `ParseResult`, `SectionJSON`）|
 | `src/parser.ts`           | 解析ロジック（`parseMarkdown`, `findSection`, `buildBreadcrumb`） |
-| `src/commands/outline.ts` | `outline` コマンドの出力フォーマッタ                              |
-| `src/commands/inspect.ts` | `inspect` コマンドの出力フォーマッタ                              |
+| `src/commands/dive.ts`    | `dive` コマンドの出力フォーマッタ（`outline`/`inspect` を統合）    |
 | `src/commands/read.ts`    | `read` コマンドの出力フォーマッタ                                 |
 | `src/cli.ts`              | Commander.js による CLI エントリーポイント                        |
 | `src/index.ts`            | 公開 API の再エクスポート（ライブラリとして使う場合のエントリー） |
@@ -114,8 +113,8 @@ import { Command } from "commander";
 | インターフェース   | PascalCase（`I` プレフィックスなし） | `Section`, `ParseResult`  |
 | 定数（モジュールスコープ） | UPPER_SNAKE_CASE          | `AUTO_SUMMARY_LENGTH`       |
 | 型エイリアス       | PascalCase                     | `SectionJSON`               |
-| ファイル名         | camelCase または kebab-case    | `parser.ts`, `outline.ts`   |
-| CLIコマンド名      | kebab-case                     | `md-dive outline`           |
+| ファイル名         | camelCase または kebab-case    | `parser.ts`, `dive.ts`      |
+| CLIコマンド名      | kebab-case                     | `markdive dive`             |
 
 ### フォーマット
 

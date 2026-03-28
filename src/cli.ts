@@ -1,44 +1,32 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { runInspect } from "./commands/inspect";
-import { runOutline } from "./commands/outline";
+import { runDive } from "./commands/dive";
 import { runRead } from "./commands/read";
 import { parseMarkdown } from "./parser";
 
 const program = new Command();
 
 program
-    .name("md-dive")
+    .name("markdive")
     .description("AIエージェントと人間のための階層的Markdownナビゲーター")
-    .version("0.1.0");
+    .version("0.2.0");
 
 // ---------------------------------------------------------------------------
-// outline
+// dive
 // ---------------------------------------------------------------------------
 program
-    .command("outline <file>")
-    .description("ドキュメント構造の最初のN階層を出力する（デフォルト: 深さ2）")
+    .command("dive <file>")
+    .description("ドキュメント構造を段階的に探索して出力する（デフォルト: 深さ2）")
     .option("--json", "JSON形式で出力する", false)
+    .option("--path <id>", '探索を開始するセクションID（例: "2" または "1.3"）')
     .option("--depth <n>", "表示する見出しの最大深さ", "2")
-    .action((file: string, options: { json: boolean; depth: string }) => {
+    .action((file: string, options: { json: boolean; path?: string; depth: string }) => {
         const result = parseMarkdown(file);
-        runOutline(result, {
+        runDive(result, {
             depth: parseInt(options.depth, 10),
             json: options.json,
+            path: options.path,
         });
-    });
-
-// ---------------------------------------------------------------------------
-// inspect
-// ---------------------------------------------------------------------------
-program
-    .command("inspect <file>")
-    .description("指定したパスのセクション直下のサブセクション一覧を表示する")
-    .requiredOption("--path <id>", '参照するセクションID（例: "2" または "1.3"）')
-    .option("--json", "JSON形式で出力する", false)
-    .action((file: string, options: { path: string; json: boolean }) => {
-        const result = parseMarkdown(file);
-        runInspect(result, { path: options.path, json: options.json });
     });
 
 // ---------------------------------------------------------------------------
