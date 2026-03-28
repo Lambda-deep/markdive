@@ -1,5 +1,8 @@
 # md-dive
 
+[![npm version](https://img.shields.io/npm/v/md-dive.svg)](https://www.npmjs.com/package/md-dive)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 大規模なMarkdownファイルを階層的・オンデマンドにナビゲートするためのCLIツールです。AIコーディングエージェントや開発者が、ファイル全体を一度に読み込むことなく、必要なセクションだけを効率的に参照できるよう設計されています。
 
 ## 背景・動機
@@ -227,3 +230,7 @@ npm run lint    # 型チェックのみ（出力なし）
 ## 動作要件
 
 - Node.js 18以上
+
+## ライセンス
+
+[MIT](LICENSE) © 2026 Lambda-deep
