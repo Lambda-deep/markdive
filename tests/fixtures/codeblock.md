@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD025 MD040 -->
 # Section 1: Basic Code Block
 
 Here's a simple code block with a heading-like line inside:
