@@ -246,7 +246,7 @@ describe("runDive – front matter display", () => {
 describe("runRead – front matter in metadata header", () => {
     const result = parseMarkdown(fixturePath("frontmatter.md"));
 
-    test("front matter keys appear verbatim before md-dive block", () => {
+    test("front matter keys appear verbatim before markdive block", () => {
         const cap = captureConsole();
         runRead(result, { path: "1" });
         cap.restore();
@@ -266,11 +266,11 @@ describe("runRead – front matter in metadata header", () => {
         expect(output).toContain("  context: Installation Guide");
     });
 
-    test("no collision: front matter keys do not duplicate md-dive fields", () => {
+    test("no collision: front matter keys do not duplicate markdive fields", () => {
         const cap = captureConsole();
         runRead(result, { path: "1" });
         cap.restore();
-        // "source:"/"path:"/"context:" at top-level should NOT appear (only indented under md-dive:)
+        // "source:"/"path:"/"context:" at top-level should NOT appear (only indented under markdive:)
         const topLevelConflicts = cap.lines.filter((l) => /^(source|path|context):/.test(l));
         expect(topLevelConflicts).toHaveLength(0);
     });
@@ -283,7 +283,7 @@ describe("runRead – front matter in metadata header", () => {
         // Only markdive: block and --- delimiters should appear before the section content
         const headerEnd = cap.lines.lastIndexOf("---");
         const headerContent = cap.lines.slice(1, headerEnd);
-        // Should be exactly: "md-dive:", "  source: ...", "  path: ...", "  context: ..."
+        // Should be exactly: "markdive:", "  source: ...", "  path: ...", "  context: ..."
         expect(headerContent).toHaveLength(4);
         expect(headerContent[0]).toBe("markdive:");
     });

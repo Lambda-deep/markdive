@@ -7,9 +7,9 @@ draft: false
 
 # Installation Guide
 
-<!-- summary: How to install md-dive -->
+<!-- summary: How to install markdive -->
 
-This guide explains how to install and configure md-dive.
+This guide explains how to install and configure markdive.
 
 ## Requirements
 
