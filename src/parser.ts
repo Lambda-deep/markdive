@@ -20,7 +20,7 @@ const SUMMARY_COMMENT_RE = /^<!--\s*summary:\s*(.*?)\s*-->$/;
 export function parseMarkdown(filePath: string): ParseResult {
   const absolutePath = path.resolve(filePath);
   const raw = fs.readFileSync(absolutePath, "utf-8");
-  const lines = raw.split("\n");
+  const lines = raw.replace(/\r\n/g, "\n").split("\n"); // Normalize line endings
 
   // -----------------------------------------------------------------------
   // パス1: 見出しの位置と本文行を収集する
@@ -34,9 +34,24 @@ export function parseMarkdown(filePath: string): ParseResult {
   }
 
   const rawSections: RawSection[] = [];
+  let inCodeBlock = false; // コードブロック内にいるかどうかを追跡
 
   for (let i = 0; i < lines.length; i++) {
-    const match = HEADING_RE.exec(lines[i]);
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // コードブロックの開始/終了を検出
+    if (trimmed.startsWith("```")) {
+      inCodeBlock = !inCodeBlock;
+      continue; // コードフェンス行自体は見出しチェックしない
+    }
+
+    // コードブロック内では見出し検出をスキップ
+    if (inCodeBlock) {
+      continue;
+    }
+
+    const match = HEADING_RE.exec(line);
     if (match) {
       rawSections.push({
         level: match[1].length,

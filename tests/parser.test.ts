@@ -132,3 +132,56 @@ describe("buildBreadcrumb", () => {
     );
   });
 });
+
+describe("Context-aware parsing: Code blocks", () => {
+  const result = parseMarkdown(fixturePath("codeblock.md"));
+
+  test("does not detect headings inside code blocks", () => {
+    // Should only have 4 sections (Section 1-4), not additional sections from code block content
+    expect(result.sections).toHaveLength(4);
+    expect(result.sections[0].id).toBe("1");
+    expect(result.sections[1].id).toBe("2");
+    expect(result.sections[2].id).toBe("3");
+    expect(result.sections[3].id).toBe("4");
+  });
+
+  test("assigns correct IDs when code blocks are present", () => {
+    expect(result.sections[0].title).toBe("Section 1: Basic Code Block");
+    expect(result.sections[1].title).toBe("Section 2: Code Block with Language");
+    expect(result.sections[2].title).toBe("Section 3: TypeScript Example");
+    expect(result.sections[3].title).toBe("Section 4: Multiple Code Blocks");
+  });
+
+  test("section content includes code block content", () => {
+    const section1 = result.sections[0];
+    // Content should include the code block lines (but not be parsed as subsections)
+    expect(section1.content).toContain("# This is NOT a heading");
+    expect(section1.content).toContain("## This is also NOT a heading");
+  });
+
+  test("handles language-specified code blocks correctly", () => {
+    const section2 = result.sections[1];
+    expect(section2.content).toContain("# Install dependencies");
+    expect(section2.content).toContain("npm install");
+  });
+
+  test("no false subsections are created", () => {
+    // Each section should have zero children
+    expect(result.sections[0].children).toHaveLength(0);
+    expect(result.sections[1].children).toHaveLength(0);
+    expect(result.sections[2].children).toHaveLength(0);
+    expect(result.sections[3].children).toHaveLength(0);
+  });
+
+  test("existing fixtures still parse correctly (regression test)", () => {
+    const sampleResult = parseMarkdown(fixturePath("sample.md"));
+    expect(sampleResult.sections).toHaveLength(2);
+    expect(sampleResult.sections[0].id).toBe("1");
+    
+    const deepResult = parseMarkdown(fixturePath("deep.md"));
+    expect(deepResult.sections.length).toBeGreaterThan(0);
+    
+    const singleResult = parseMarkdown(fixturePath("single.md"));
+    expect(singleResult.sections).toHaveLength(1);
+  });
+});
