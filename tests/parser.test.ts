@@ -439,6 +439,20 @@ describe("parseMarkdown – summary-edge.md", () => {
     });
 });
 
+describe("parseMarkdown – link-summary.md", () => {
+    const result = parseMarkdown(fixturePath("link-summary.md"));
+
+    test("auto-summary keeps link label and removes markdown link syntax", () => {
+        expect(result.sections[0].summary).toBe("Read the documentation before continuing.");
+    });
+
+    test("unsectionedContent is preserved and can still contain the original markdown", () => {
+        expect(result.unsectionedContent).toBe(
+            "Intro with [guide link](https://example.com/guide) before any heading.",
+        );
+    });
+});
+
 // ---------------------------------------------------------------------------
 // Edge case: text before the first heading (pre-section text)
 // ---------------------------------------------------------------------------

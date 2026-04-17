@@ -1,7 +1,6 @@
 import { findSection } from "../parser";
+import { buildAutoSummary } from "../summary";
 import type { DiveNodeJSON, ParsedDocument, Section, SectionDiveNodeJSON } from "../types";
-
-const AUTO_SUMMARY_LENGTH = 50;
 
 /** dive コマンドのオプション。 */
 export interface DiveOptions {
@@ -121,30 +120,6 @@ function toUnsectionedNode(
     return {
         kind: "unsectioned",
         id: "0",
-        summary: createAutoSummary(content),
+        summary: buildAutoSummary(content.split("\n")),
     };
-}
-
-function createAutoSummary(content: string): string {
-    for (const line of content.split("\n")) {
-        const trimmed = line.trim();
-        if (trimmed === "" || trimmed.startsWith("<!--")) {
-            continue;
-        }
-
-        const plain = trimmed
-            .replace(/!\[.*?\]\(.*?\)/g, "")
-            .replace(/\[.*?\]\(.*?\)/g, "$&")
-            .replace(/[`*_~]/g, "")
-            .trim();
-        if (plain.length === 0) {
-            continue;
-        }
-
-        return plain.length > AUTO_SUMMARY_LENGTH
-            ? `${plain.slice(0, AUTO_SUMMARY_LENGTH)}...`
-            : plain;
-    }
-
-    return "";
 }

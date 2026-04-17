@@ -269,6 +269,31 @@ describe("runRead – unsectioned content", () => {
     });
 });
 
+describe("runDive – unsectioned summary formatting", () => {
+    const result = parseMarkdown(fixturePath("link-summary.md"));
+
+    test("path 0 text output keeps the link label only in summary", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "0", depth: 2, json: false });
+        cap.restore();
+
+        expect(cap.lines).toEqual(["0: Intro with guide link before any heading."]);
+    });
+
+    test("path 0 JSON output keeps the link label only in summary", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "0", depth: 2, json: true });
+        cap.restore();
+
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        expect(parsed).toEqual({
+            kind: "unsectioned",
+            id: "0",
+            summary: "Intro with guide link before any heading.",
+        });
+    });
+});
+
 // ---------------------------------------------------------------------------
 // Front matter display
 // ---------------------------------------------------------------------------

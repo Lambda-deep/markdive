@@ -1,9 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { buildAutoSummary } from "./summary";
 import type { FrontMatter, ParsedDocument, Section } from "./types";
-
-/** 自動生成サマリーの最大文字数。 */
-const AUTO_SUMMARY_LENGTH = 50;
 
 /** Markdown ATX形式の見出し行にマッチする正規表現（例: "## My Title"） */
 const HEADING_RE = /^(#{1,6})\s+(.+)$/;
@@ -198,7 +196,7 @@ function getParentId(id: string): string | null {
  *
  * 優先順位:
  *   1. contentLines 内で最初に見つかる `<!-- summary: ... -->` コメント。
- *   2. 空行・コメント以外の最初の行の先頭 AUTO_SUMMARY_LENGTH 文字。
+ *   2. 空行・コメント以外の最初の行から自動生成した要約。
  */
 function extractSummary(contentLines: string[]): string {
     // 1. 明示的なサマリーコメントを探す。
@@ -210,30 +208,7 @@ function extractSummary(contentLines: string[]): string {
         }
     }
 
-    return extractAutoSummary(contentLines);
-}
-
-function extractAutoSummary(contentLines: string[]): string {
-    for (const line of contentLines) {
-        const trimmed = line.trim();
-        if (trimmed === "" || trimmed.startsWith("<!--")) {
-            continue;
-        }
-        // インラインMarkdown記法を除去してよりクリーンなサマリーにする。
-        const plain = trimmed
-            .replace(/!\[.*?\]\(.*?\)/g, "") // 画像を除去
-            .replace(/\[.*?\]\(.*?\)/g, "$&") // リンクテキストは保持
-            .replace(/[`*_~]/g, "")
-            .trim();
-        if (plain.length === 0) {
-            continue;
-        }
-        return (
-            plain.slice(0, AUTO_SUMMARY_LENGTH) + (plain.length > AUTO_SUMMARY_LENGTH ? "..." : "")
-        );
-    }
-
-    return "";
+    return buildAutoSummary(contentLines);
 }
 
 /**
