@@ -1,9 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { FrontMatter, ParseResult, Section } from "./types";
-
-/** 自動生成サマリーの最大文字数。 */
-const AUTO_SUMMARY_LENGTH = 50;
+import { buildAutoSummary } from "./summary";
+import type { FrontMatter, ParsedDocument, Section } from "./types";
 
 /** Markdown ATX形式の見出し行にマッチする正規表現（例: "## My Title"） */
 const HEADING_RE = /^(#{1,6})\s+(.+)$/;
@@ -15,9 +13,9 @@ const SUMMARY_COMMENT_RE = /^<!--\s*summary:\s*(.*?)\s*-->$/;
  * MarkdownファイルをSectionのツリーに解析します。
  *
  * @param filePath - 解析対象のMarkdownファイルのパス。
- * @returns ファイルパスとルートレベルのセクションを含むParseResult。
+ * @returns ファイルパスとルートレベルのセクションを含むParsedDocument。
  */
-export function parseMarkdown(filePath: string): ParseResult {
+export function parseMarkdown(filePath: string): ParsedDocument {
     const absolutePath = path.resolve(filePath);
     const raw = fs.readFileSync(absolutePath, "utf-8");
     const lines = raw.replace(/\r\n/g, "\n").split("\n"); // Normalize line endings
@@ -83,6 +81,11 @@ export function parseMarkdown(filePath: string): ParseResult {
             });
         }
     }
+
+    const firstHeadingLineStart = rawSections[0]?.lineStart ?? lines.length;
+    const unsectionedContent = buildContent(lines.slice(contentStartLine, firstHeadingLineStart), {
+        stripSummaryComments: false,
+    });
 
     // lineEnd を設定: 各セクションは同レベルまたは上位レベルの次の見出しが始まる行で終わる。
     for (let i = 0; i < rawSections.length; i++) {
@@ -167,7 +170,12 @@ export function parseMarkdown(filePath: string): ParseResult {
         }
     }
 
-    return { filePath: absolutePath, sections: roots, frontMatter };
+    return {
+        filePath: absolutePath,
+        sections: roots,
+        frontMatter,
+        unsectionedContent: unsectionedContent || undefined,
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -188,7 +196,7 @@ function getParentId(id: string): string | null {
  *
  * 優先順位:
  *   1. contentLines 内で最初に見つかる `<!-- summary: ... -->` コメント。
- *   2. 空行・コメント以外の最初の行の先頭 AUTO_SUMMARY_LENGTH 文字。
+ *   2. 空行・コメント以外の最初の行から自動生成した要約。
  */
 function extractSummary(contentLines: string[]): string {
     // 1. 明示的なサマリーコメントを探す。
@@ -200,35 +208,19 @@ function extractSummary(contentLines: string[]): string {
         }
     }
 
-    // 2. 最初の実質的なテキスト行から自動生成する。
-    for (const line of contentLines) {
-        const trimmed = line.trim();
-        if (trimmed === "" || trimmed.startsWith("<!--")) {
-            continue;
-        }
-        // インラインMarkdown記法を除去してよりクリーンなサマリーにする。
-        const plain = trimmed
-            .replace(/!\[.*?\]\(.*?\)/g, "") // 画像を除去
-            .replace(/\[.*?\]\(.*?\)/g, "$&") // リンクテキストは保持
-            .replace(/[`*_~]/g, "")
-            .trim();
-        if (plain.length === 0) {
-            continue;
-        }
-        return (
-            plain.slice(0, AUTO_SUMMARY_LENGTH) + (plain.length > AUTO_SUMMARY_LENGTH ? "..." : "")
-        );
-    }
-
-    return "";
+    return buildAutoSummary(contentLines);
 }
 
 /**
  * コンテンツ行を結合して文字列にし、先頭・末尾の空行を除去します。
  */
-function buildContent(contentLines: string[]): string {
-    // サマリーコメント行を表示コンテンツから除外する。
-    const filtered = contentLines.filter((l) => !SUMMARY_COMMENT_RE.test(l.trim()));
+function buildContent(
+    contentLines: string[],
+    options: { stripSummaryComments: boolean } = { stripSummaryComments: true },
+): string {
+    const filtered = options.stripSummaryComments
+        ? contentLines.filter((line) => !SUMMARY_COMMENT_RE.test(line.trim()))
+        : contentLines;
     // 先頭・末尾の空行を除去する。
     let start = 0;
     let end = filtered.length;
@@ -245,7 +237,7 @@ function buildContent(contentLines: string[]): string {
  * 解析結果の中からIDでセクションを検索します。
  * 見つからない場合は undefined を返します。
  */
-export function findSection(result: ParseResult, id: string): Section | undefined {
+export function findSection(result: ParsedDocument, id: string): Section | undefined {
     return findInList(result.sections, id);
 }
 

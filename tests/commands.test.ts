@@ -74,6 +74,55 @@ describe("runDive – text", () => {
     });
 });
 
+describe("runDive – unsectioned content", () => {
+    const result = parseMarkdown(fixturePath("presection.md"));
+
+    test("root text output prints reserved path 0 before sections", () => {
+        const cap = captureConsole();
+        runDive(result, { depth: 2, json: false });
+        cap.restore();
+
+        expect(cap.lines[0]).toBe("0: This text appears before any heading.");
+        expect(cap.lines[1]).toContain("1: First Section");
+    });
+
+    test("path 0 text output prints only the unsectioned summary", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "0", depth: 2, json: false });
+        cap.restore();
+
+        expect(cap.lines).toEqual(["0: This text appears before any heading."]);
+    });
+
+    test("root JSON output includes a leading unsectioned node", () => {
+        const cap = captureConsole();
+        runDive(result, { depth: 2, json: true });
+        cap.restore();
+
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        expect(parsed[0]).toEqual({
+            kind: "unsectioned",
+            id: "0",
+            summary: "This text appears before any heading.",
+        });
+        expect(parsed[1].kind).toBe("section");
+        expect(parsed[1].id).toBe("1");
+    });
+
+    test("path 0 JSON output returns a single unsectioned node", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "0", depth: 2, json: true });
+        cap.restore();
+
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        expect(parsed).toEqual({
+            kind: "unsectioned",
+            id: "0",
+            summary: "This text appears before any heading.",
+        });
+    });
+});
+
 describe("runDive – orphan section indentation", () => {
     const result = parseMarkdown(fixturePath("skipped-level.md"));
 
@@ -106,6 +155,7 @@ describe("runDive – JSON", () => {
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
         expect(Array.isArray(parsed)).toBe(true);
+        expect(parsed[0].kind).toBe("section");
         expect(parsed[0].id).toBe("1");
         expect(parsed[0].title).toBe("Project Overview");
         expect(Array.isArray(parsed[0].children)).toBe(true);
@@ -148,6 +198,7 @@ describe("runDive – JSON", () => {
         cap.restore();
         const parsed = JSON.parse(cap.lines.join("\n"));
         expect(Array.isArray(parsed)).toBe(false);
+        expect(parsed.kind).toBe("section");
         expect(parsed.id).toBe("1");
         expect(parsed.children).toHaveLength(2);
         expect(parsed.children[0].id).toBe("1.1");
@@ -196,6 +247,50 @@ describe("runRead", () => {
         cap.restore();
         const output = cap.lines.join("\n");
         expect(output).toContain("  context: Project Overview");
+    });
+});
+
+describe("runRead – unsectioned content", () => {
+    const result = parseMarkdown(fixturePath("presection.md"));
+
+    test("path 0 outputs metadata with unsectioned context and raw content", () => {
+        const cap = captureConsole();
+        runRead(result, { path: "0" });
+        cap.restore();
+
+        const output = cap.lines.join("\n");
+        expect(output).toContain("markdive:");
+        expect(output).toContain("  source: presection.md");
+        expect(output).toContain("  path: 0");
+        expect(output).toContain("  context: unsectioned");
+        expect(output).toContain("This text appears before any heading.");
+        expect(output).toContain("It should not be included in any section.");
+        expect(output).not.toContain("# First Section");
+    });
+});
+
+describe("runDive – unsectioned summary formatting", () => {
+    const result = parseMarkdown(fixturePath("link-summary.md"));
+
+    test("path 0 text output keeps the link label only in summary", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "0", depth: 2, json: false });
+        cap.restore();
+
+        expect(cap.lines).toEqual(["0: Intro with guide link before any heading."]);
+    });
+
+    test("path 0 JSON output keeps the link label only in summary", () => {
+        const cap = captureConsole();
+        runDive(result, { path: "0", depth: 2, json: true });
+        cap.restore();
+
+        const parsed = JSON.parse(cap.lines.join("\n"));
+        expect(parsed).toEqual({
+            kind: "unsectioned",
+            id: "0",
+            summary: "Intro with guide link before any heading.",
+        });
     });
 });
 

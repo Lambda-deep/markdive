@@ -29,24 +29,35 @@ export interface FrontMatter {
 /**
  * Markdownファイルの解析結果。
  */
-export interface ParseResult {
+export interface ParsedDocument {
     /** ソースファイルの絶対パスまたは相対パス */
     filePath: string;
     /** トップレベルセクションの配列 */
     sections: Section[];
     /** YAMLまたはTOMLフロントマター（存在する場合） */
     frontMatter?: FrontMatter;
+    /** どの見出しにも属さない本文（存在する場合） */
+    unsectionedContent?: string;
 }
 
 /**
  * セクションのJSON直列化可能な表現（循環参照となる parent を含まない）。
  */
-export interface SectionJSON {
+export type DiveNodeJSON = SectionDiveNodeJSON | UnsectionedDiveNodeJSON;
+
+export interface SectionDiveNodeJSON {
+    kind: "section";
     id: string;
     level: number;
     title: string;
     summary: string;
     /** 子セクションが存在するかどうか。depth制限で children が空配列でも true になる場合がある。 */
     hasChildren: boolean;
-    children: SectionJSON[];
+    children: DiveNodeJSON[];
+}
+
+export interface UnsectionedDiveNodeJSON {
+    kind: "unsectioned";
+    id: "0";
+    summary: string;
 }

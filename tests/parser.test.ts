@@ -307,6 +307,18 @@ describe("parseMarkdown – noheadings.md", () => {
         expect(result.sections).toHaveLength(0);
     });
 
+    test("stores the full document in unsectionedContent", () => {
+        expect(result.unsectionedContent).toBe(
+            [
+                "This file contains only paragraph text.",
+                "",
+                "No ATX-style headings appear anywhere in this file.",
+                "",
+                "Just regular prose content.",
+            ].join("\n"),
+        );
+    });
+
     test("frontMatter is undefined", () => {
         expect(result.frontMatter).toBeUndefined();
     });
@@ -427,6 +439,20 @@ describe("parseMarkdown – summary-edge.md", () => {
     });
 });
 
+describe("parseMarkdown – link-summary.md", () => {
+    const result = parseMarkdown(fixturePath("link-summary.md"));
+
+    test("auto-summary keeps link label and removes markdown link syntax", () => {
+        expect(result.sections[0].summary).toBe("Read the documentation before continuing.");
+    });
+
+    test("unsectionedContent is preserved and can still contain the original markdown", () => {
+        expect(result.unsectionedContent).toBe(
+            "Intro with [guide link](https://example.com/guide) before any heading.",
+        );
+    });
+});
+
 // ---------------------------------------------------------------------------
 // Edge case: text before the first heading (pre-section text)
 // ---------------------------------------------------------------------------
@@ -443,7 +469,24 @@ describe("parseMarkdown – presection.md (text before first heading)", () => {
         expect(result.sections[0].content).not.toContain("should not be included");
     });
 
+    test("stores text before the first heading in unsectionedContent", () => {
+        expect(result.unsectionedContent).toBe(
+            [
+                "This text appears before any heading.",
+                "It should not be included in any section.",
+            ].join("\n"),
+        );
+    });
+
     test("section content contains only post-heading text", () => {
         expect(result.sections[0].content).toContain("Content of first section.");
+    });
+});
+
+describe("parseMarkdown – frontmatter.md (unsectioned content separation)", () => {
+    const result = parseMarkdown(fixturePath("frontmatter.md"));
+
+    test("does not create unsectionedContent when only blank lines exist after front matter", () => {
+        expect(result.unsectionedContent).toBeUndefined();
     });
 });
