@@ -38,6 +38,9 @@ npx markdive dive README.md
 # ルートから depth=2（デフォルト）
 markdive dive README.md
 
+# 見出し未所属本文を確認
+markdive dive README.md --path 0
+
 # ルートから depth=3
 markdive dive README.md --depth 3
 
@@ -54,10 +57,12 @@ markdive dive README.md --path 1 --depth 1 --json
 | オプション | デフォルト | 説明 |
 |---|---|---|
 | `--depth <n>` | `2` | 探索する深さ |
-| `--path <id>` | なし | 探索起点のセクションID |
+| `--path <id>` | なし | 探索起点のパスID（`0` は見出し未所属本文） |
 | `--json` | `false` | JSON形式で出力する |
 
 `--path` を指定した場合、`--depth` は「起点からの相対深さ」として扱われます。
+
+`0` は予約パスで、最初の見出しより前にある本文、または見出しを1つも持たない文書全体を指します。
 
 **出力例（テキスト）:**
 
@@ -89,24 +94,31 @@ $ markdive dive spec.md --path 1
 $ markdive dive spec.md --json
 [
   {
+    "kind": "unsectioned",
+    "id": "0",
+    "summary": "Intro text before the first heading."
+  },
+  {
+    "kind": "section",
     "id": "1",
     "level": 1,
     "title": "Project Overview",
     "summary": "High-level introduction to the project",
     "hasChildren": true,
     "children": [
-      { "id": "1.1", "level": 2, "title": "Getting Started", "summary": "How to install and run", "hasChildren": true, "children": [] },
-      { "id": "1.2", "level": 2, "title": "Usage", "summary": "Basic usage instructions.", "hasChildren": true, "children": [] }
+      { "kind": "section", "id": "1.1", "level": 2, "title": "Getting Started", "summary": "How to install and run", "hasChildren": true, "children": [] },
+      { "kind": "section", "id": "1.2", "level": 2, "title": "Usage", "summary": "Basic usage instructions.", "hasChildren": true, "children": [] }
     ]
   },
   {
+    "kind": "section",
     "id": "2",
     "level": 1,
     "title": "API Reference",
     "summary": "The complete API reference.",
     "hasChildren": true,
     "children": [
-      { "id": "2.1", "level": 2, "title": "Methods", "summary": "List of available methods.", "hasChildren": true, "children": [] }
+      { "kind": "section", "id": "2.1", "level": 2, "title": "Methods", "summary": "List of available methods.", "hasChildren": true, "children": [] }
     ]
   }
 ]
@@ -117,6 +129,7 @@ $ markdive dive spec.md --json
 ```json
 $ markdive dive spec.md --path 1 --json
 {
+  "kind": "section",
   "id": "1",
   "level": 1,
   "title": "Project Overview",
@@ -124,28 +137,41 @@ $ markdive dive spec.md --path 1 --json
   "hasChildren": true,
   "children": [
     {
+      "kind": "section",
       "id": "1.1",
       "level": 2,
       "title": "Getting Started",
       "summary": "How to install and run",
       "hasChildren": true,
       "children": [
-        { "id": "1.1.1", "level": 3, "title": "Installation", "summary": "Run npm install to install dependencies.", "hasChildren": false, "children": [] },
-        { "id": "1.1.2", "level": 3, "title": "Configuration", "summary": "Edit the config file as needed.", "hasChildren": false, "children": [] }
+        { "kind": "section", "id": "1.1.1", "level": 3, "title": "Installation", "summary": "Run npm install to install dependencies.", "hasChildren": false, "children": [] },
+        { "kind": "section", "id": "1.1.2", "level": 3, "title": "Configuration", "summary": "Edit the config file as needed.", "hasChildren": false, "children": [] }
       ]
     },
     {
+      "kind": "section",
       "id": "1.2",
       "level": 2,
       "title": "Usage",
       "summary": "Basic usage instructions.",
       "hasChildren": true,
       "children": [
-        { "id": "1.2.1", "level": 3, "title": "Basic Example", "summary": "Here is a simple example.", "hasChildren": false, "children": [] },
-        { "id": "1.2.2", "level": 3, "title": "Advanced Example", "summary": "Here is a more advanced example.", "hasChildren": false, "children": [] }
+        { "kind": "section", "id": "1.2.1", "level": 3, "title": "Basic Example", "summary": "Here is a simple example.", "hasChildren": false, "children": [] },
+        { "kind": "section", "id": "1.2.2", "level": 3, "title": "Advanced Example", "summary": "Here is a more advanced example.", "hasChildren": false, "children": [] }
       ]
     }
   ]
+}
+```
+
+**出力例（`--path 0 --json`）:**
+
+```json
+$ markdive dive spec.md --path 0 --json
+{
+  "kind": "unsectioned",
+  "id": "0",
+  "summary": "Intro text before the first heading."
 }
 ```
 
@@ -155,6 +181,7 @@ $ markdive dive spec.md --path 1 --json
 
 ```bash
 markdive read README.md --path 2.1
+markdive read README.md --path 0
 ```
 
 **出力形式（例）:**
@@ -170,6 +197,19 @@ markdive:
 ## セクション2.1
 
 本文...
+```
+
+`--path 0` を指定した場合は、見出しを再構成せず、見出し未所属本文そのものを出力します。
+
+```text
+---
+markdive:
+  source: spec.md
+  path: 0
+  context: unsectioned
+---
+
+Intro text before the first heading.
 ```
 
 ## セクションID

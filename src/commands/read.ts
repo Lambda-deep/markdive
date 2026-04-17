@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import { buildBreadcrumb, findSection } from "../parser";
-import type { ParseResult } from "../types";
+import type { ParsedDocument } from "../types";
 
 /** read コマンドのオプション。 */
 export interface ReadOptions {
@@ -13,15 +13,34 @@ export interface ReadOptions {
  * 指定されたセクションの全コンテンツを、ソースファイル名・セクションパス・
  * パンくずリストを含むメタデータブロックとともに出力します。
  */
-export function runRead(result: ParseResult, options: ReadOptions): void {
+export function runRead(result: ParsedDocument, options: ReadOptions): void {
+    if (options.path === "0") {
+        if (!result.unsectionedContent) {
+            console.error('Error: Unsectioned content "0" not found.');
+            process.exit(1);
+        }
+
+        printMetadataHeader(result, "0", "unsectioned");
+        console.log(result.unsectionedContent);
+        return;
+    }
+
     const section = findSection(result, options.path);
     if (!section) {
         console.error(`Error: Section "${options.path}" not found.`);
         process.exit(1);
     }
 
-    const filename = path.basename(result.filePath);
     const breadcrumb = buildBreadcrumb(section);
+
+    printMetadataHeader(result, section.id, breadcrumb);
+
+    // セクション以下の全コンテンツを再帰的に出力
+    printSection(section);
+}
+
+function printMetadataHeader(result: ParsedDocument, pathId: string, context: string): void {
+    const filename = path.basename(result.filePath);
 
     // メタデータヘッダー
     console.log("---");
@@ -34,13 +53,10 @@ export function runRead(result: ParseResult, options: ReadOptions): void {
     // markdive の固定フィールドはネストして表示する（フロントマターキーとの衝突を避ける）
     console.log("markdive:");
     console.log(`  source: ${filename}`);
-    console.log(`  path: ${section.id}`);
-    console.log(`  context: ${breadcrumb}`);
+    console.log(`  path: ${pathId}`);
+    console.log(`  context: ${context}`);
     console.log("---");
     console.log("");
-
-    // セクション以下の全コンテンツを再帰的に出力
-    printSection(section);
 }
 
 /** セクションとその子孫を再帰的に出力するヘルパー。 */
