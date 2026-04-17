@@ -219,5 +219,5 @@ const fixturePath = (name: string) => path.join(__dirname, "fixtures", name);
 9. `npm run build` でビルドが成功することを確認する
 
 ## ドキュメントについて
-- ドキュメントは Markdown 形式で `docs/` ディレクトリに配置する
+- ドキュメントは Markdown 形式で `docs/` ディレクトリに配置する。`YYYYMMDD-<title>/` のサブディレクトリを作成し、その中に `index.md` と関連ドキュメントを置くこと。
 - プロジェクトのアーキテクチャに関する議論があった際にはADR（Architectural Decision Records）を `docs/adr/` に配置する。作成にあたってはSkill:`/architecture-decision-records`を利用すること。

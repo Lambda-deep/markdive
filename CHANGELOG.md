@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-04-17
+
+### Added
+
+- Support for unsectioned Markdown content in parsing and CLI output
+- Design documentation and ADR for unsectioned content handling and path zero behavior
+
+### Changed
+
+- `dive` and `read` now handle pre-heading content more consistently
+- Library exports and types updated to support the new unsectioned content flow
+- README updated with the new behavior and usage notes
+
+### Fixed
+
+- Summary generation now handles link-heavy content more reliably
+- Regression fix for the `link-summary` fixture coverage
+
 ## [0.3.1] - 2026-03-29
 
 ### Added
@@ -57,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Blockquote detection: headings inside `>` blocks are not parsed as sections
 - TypeScript library API re-exported from `src/index.ts`
 
-[Unreleased]: https://github.com/Lambda-deep/markdive/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/Lambda-deep/markdive/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Lambda-deep/markdive/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/Lambda-deep/markdive/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Lambda-deep/markdive/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Lambda-deep/markdive/compare/v0.1.0...v0.2.0

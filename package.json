@@ -1,6 +1,6 @@
 {
     "name": "markdive",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "description": "A CLI tool for hierarchical navigation of large Markdown files",
     "author": "Lambda-deep (https://github.com/Lambda-deep)",
     "license": "MIT",
