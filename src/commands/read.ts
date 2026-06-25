@@ -15,7 +15,7 @@ export interface ReadOptions {
  */
 export function runRead(result: ParsedDocument, options: ReadOptions): void {
     // --path 指定時は従来通り
-    if (options.path) {
+    if (options.path !== undefined) {
         if (options.path === "0") {
             if (!result.unsectionedContent) {
                 console.error('Error: Unsectioned content "0" not found.');
@@ -39,20 +39,19 @@ export function runRead(result: ParsedDocument, options: ReadOptions): void {
     // --path 省略時: ファイル全文を出力
     printMetadataHeader(result, "(full)", "(full document)");
     let printed = false;
+    if (result.unsectionedContent) {
+        console.log(result.unsectionedContent);
+        printed = true;
+    }
     // 見出しがある場合は全セクションを順に出力
     if (result.sections.length > 0) {
         for (const section of result.sections) {
+            if (printed) {
+                console.log("");
+            }
             printSection(section);
             printed = true;
         }
-    }
-    // 見出しがない場合や未所属本文がある場合は unsectionedContent
-    if (result.unsectionedContent) {
-        if (printed) {
-            console.log("");
-        }
-        console.log(result.unsectionedContent);
-        printed = true;
     }
     // 完全空ファイルはメタデータヘッダーのみ
 }
