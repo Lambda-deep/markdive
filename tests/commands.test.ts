@@ -383,3 +383,51 @@ describe("runRead – front matter in metadata header", () => {
         expect(headerContent[0]).toBe("markdive:");
     });
 });
+
+// ---------------------------------------------------------------------------
+// read – --path 省略時の全文出力
+// ---------------------------------------------------------------------------
+describe("runRead – full document (no --path)", () => {
+    test("noheadings.md: metadata header has path=(full) and context=(full document)", () => {
+        const result = parseMarkdown(fixturePath("noheadings.md"));
+        const cap = captureConsole();
+        runRead(result, {});
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("  path: (full)");
+        expect(output).toContain("  context: (full document)");
+    });
+
+    test("noheadings.md: full prose content is output", () => {
+        const result = parseMarkdown(fixturePath("noheadings.md"));
+        const cap = captureConsole();
+        runRead(result, {});
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("This file contains only paragraph text.");
+        expect(output).toContain("Just regular prose content.");
+    });
+
+    test("sample.md: all top-level sections are output", () => {
+        const result = parseMarkdown(fixturePath("sample.md"));
+        const cap = captureConsole();
+        runRead(result, {});
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("# Project Overview");
+        expect(output).toContain("## Getting Started");
+        expect(output).toContain("### Installation");
+    });
+
+    test("empty.md: only metadata header is output, no content lines", () => {
+        const result = parseMarkdown(fixturePath("empty.md"));
+        const cap = captureConsole();
+        runRead(result, {});
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output).toContain("  path: (full)");
+        // 区切り行 "---" 以外のコンテンツ行がないこと
+        const contentLines = cap.lines.filter((l) => l !== "---" && l !== "");
+        expect(contentLines.every((l) => l.startsWith(" ") || l === "markdive:")).toBe(true);
+    });
+});

@@ -36,9 +36,9 @@ program
 // ---------------------------------------------------------------------------
 program
     .command("read <file>")
-    .description("指定したパスのセクション本文を全文出力する")
-    .requiredOption("--path <id>", '読み込むパスID（例: "0" または "2.1"）')
-    .action((file: string, options: { path: string }) => {
+    .description("Markdownファイルの全文、または指定パスのセクション本文を出力する")
+    .option("--path <id>", '読み込むパスID（例: "0" または "2.1"）')
+    .action((file: string, options: { path?: string }) => {
         const result = parseMarkdown(file);
         runRead(result, { path: options.path });
     });
