@@ -4,7 +4,7 @@ import type { ParsedDocument } from "../types";
 
 /** read コマンドのオプション。 */
 export interface ReadOptions {
-    path: string;
+    path?: string;
 }
 
 /**
@@ -14,29 +14,47 @@ export interface ReadOptions {
  * パンくずリストを含むメタデータブロックとともに出力します。
  */
 export function runRead(result: ParsedDocument, options: ReadOptions): void {
-    if (options.path === "0") {
-        if (!result.unsectionedContent) {
-            console.error('Error: Unsectioned content "0" not found.');
+    // --path 指定時は従来通り
+    if (options.path) {
+        if (options.path === "0") {
+            if (!result.unsectionedContent) {
+                console.error('Error: Unsectioned content "0" not found.');
+                process.exit(1);
+            }
+            printMetadataHeader(result, "0", "unsectioned");
+            console.log(result.unsectionedContent);
+            return;
+        }
+        const section = findSection(result, options.path);
+        if (!section) {
+            console.error(`Error: Section "${options.path}" not found.`);
             process.exit(1);
         }
-
-        printMetadataHeader(result, "0", "unsectioned");
-        console.log(result.unsectionedContent);
+        const breadcrumb = buildBreadcrumb(section);
+        printMetadataHeader(result, section.id, breadcrumb);
+        printSection(section);
         return;
     }
 
-    const section = findSection(result, options.path);
-    if (!section) {
-        console.error(`Error: Section "${options.path}" not found.`);
-        process.exit(1);
+    // --path 省略時: ファイル全文を出力
+    printMetadataHeader(result, "(full)", "(full document)");
+    let printed = false;
+    // 見出しがある場合は全セクションを順に出力
+    if (result.sections.length > 0) {
+        for (const section of result.sections) {
+            printSection(section);
+            printed = true;
+        }
     }
-
-    const breadcrumb = buildBreadcrumb(section);
-
-    printMetadataHeader(result, section.id, breadcrumb);
-
-    // セクション以下の全コンテンツを再帰的に出力
-    printSection(section);
+    // 見出しがない場合や未所属本文がある場合は unsectionedContent
+    if (result.unsectionedContent) {
+        if (printed) {
+            console.log("");
+        }
+        console.log(result.unsectionedContent);
+        printed = true;
+    }
+    // 完全空ファイルはメタデータヘッダーのみ
 }
 
 function printMetadataHeader(result: ParsedDocument, pathId: string, context: string): void {
