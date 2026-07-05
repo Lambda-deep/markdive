@@ -419,6 +419,17 @@ describe("runRead – full document (no --path)", () => {
         expect(output).toContain("### Installation");
     });
 
+    test("presection.md: unsectioned content is output before the first heading", () => {
+        const result = parseMarkdown(fixturePath("presection.md"));
+        const cap = captureConsole();
+        runRead(result, {});
+        cap.restore();
+        const output = cap.lines.join("\n");
+        expect(output.indexOf("This text appears before any heading.")).toBeLessThan(
+            output.indexOf("# First Section"),
+        );
+    });
+
     test("empty.md: only metadata header is output, no content lines", () => {
         const result = parseMarkdown(fixturePath("empty.md"));
         const cap = captureConsole();
@@ -429,5 +440,27 @@ describe("runRead – full document (no --path)", () => {
         // 区切り行 "---" 以外のコンテンツ行がないこと
         const contentLines = cap.lines.filter((l) => l !== "---" && l !== "");
         expect(contentLines.every((l) => l.startsWith(" ") || l === "markdive:")).toBe(true);
+    });
+
+    test("empty path string: falls through to not-found instead of full document output", () => {
+        const result = parseMarkdown(fixturePath("sample.md"));
+        const origError = console.error.bind(console);
+        const origExit = process.exit.bind(process);
+        const errorLines: string[] = [];
+        console.error = (...args: unknown[]) => {
+            errorLines.push(args.map(String).join(" "));
+        };
+        process.exit = ((code?: number) => {
+            throw new Error(`EXIT:${code}`);
+        }) as typeof process.exit;
+
+        try {
+            expect(() => runRead(result, { path: "" })).toThrow("EXIT:1");
+        } finally {
+            console.error = origError;
+            process.exit = origExit;
+        }
+
+        expect(errorLines).toContain('Error: Section "" not found.');
     });
 });
