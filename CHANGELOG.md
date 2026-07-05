@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-07-05
+
+### Added
+
+- `read` command: new `--number` / `-n` flag to display source file line numbers (1-based) alongside output content
+- `read` command: `--path` is now optional; omitting it outputs the full document content
+
+### Changed
+
+- `Section` type extended with `startLine` / `endLine` fields for precise source location tracking
+- README updated with `--number` usage examples and `--path`-optional behavior
+
 ## [0.4.0] - 2026-04-17
 
 ### Added
@@ -75,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Blockquote detection: headings inside `>` blocks are not parsed as sections
 - TypeScript library API re-exported from `src/index.ts`
 
-[Unreleased]: https://github.com/Lambda-deep/markdive/compare/v0.4.0...HEAD
+[0.5.0]: https://github.com/Lambda-deep/markdive/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Lambda-deep/markdive/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/Lambda-deep/markdive/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Lambda-deep/markdive/compare/v0.2.0...v0.3.0
