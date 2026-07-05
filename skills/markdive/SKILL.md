@@ -58,10 +58,15 @@ markdive dive <file> --path 1.3 --json   # JSON形式で取得
 ### ステップ 3 — 必要なセクションを全文取得する（`read`）
 
 ```bash
-markdive read <file> --path 2.1   # セクション 2.1 とその子孫を全文出力
+markdive read <file> --path 2.1        # セクション 2.1 とその子孫を全文出力
+markdive read <file>                   # --path 省略でファイル全文を出力
+markdive read <file> --path 2.1 -n    # 元ファイルの行番号付きで出力
+markdive read <file> -n               # 全文を行番号付きで出力
 ```
 
-**出力形式:**
+`-n`（`--number`）を指定すると、メタデータヘッダーはそのままで本文行に元ファイルの 1-based 行番号が付与されます。エディタで再取得・参照する際の対応付けに使います。
+
+**出力形式（`-n` あり）:**
 ```
 ---
 markdive:
@@ -70,9 +75,10 @@ markdive:
   context: API リファレンス > メソッド一覧
 ---
 
-## メソッド一覧
+ 42	## メソッド一覧
 
-本文...（子セクションも含む）
+ 43	
+ 44	本文...（子セクションも含む）
 ```
 
 ---
@@ -101,6 +107,9 @@ markdive dive spec.md --path 3 --depth 2
 
 # 3. 必要な節だけ精読
 markdive read spec.md --path 3.2
+
+# 4. 編集が必要な場合は行番号付きで取得して元ファイルの位置を特定
+markdive read spec.md --path 3.2 -n
 ```
 
 ### パターン B: 章立ての確認だけで十分な場合

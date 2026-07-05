@@ -269,6 +269,68 @@ describe("runRead – unsectioned content", () => {
     });
 });
 
+describe("runRead – line numbers", () => {
+    test("path section outputs source line numbers when number=true", () => {
+        const result = parseMarkdown(fixturePath("sample.md"));
+        const cap = captureConsole();
+        runRead(result, { path: "1.1.1", number: true });
+        cap.restore();
+
+        const output = cap.lines.join("\n");
+        expect(output).toContain("11\t### Installation");
+        expect(output).toContain("13\tRun `npm install` to install dependencies.");
+    });
+
+    test("path 0 outputs unsectioned source line numbers when number=true", () => {
+        const result = parseMarkdown(fixturePath("presection.md"));
+        const cap = captureConsole();
+        runRead(result, { path: "0", number: true });
+        cap.restore();
+
+        const output = cap.lines.join("\n");
+        expect(output).toContain("1\tThis text appears before any heading.");
+        expect(output).toContain("2\tIt should not be included in any section.");
+    });
+
+    test("full document outputs from contentStartLine to EOF when number=true", () => {
+        const result = parseMarkdown(fixturePath("noheadings.md"));
+        const cap = captureConsole();
+        runRead(result, { number: true });
+        cap.restore();
+
+        const output = cap.lines.join("\n");
+        expect(output).toContain("1\tThis file contains only paragraph text.");
+        expect(output).toContain("5\tJust regular prose content.");
+    });
+
+    test("full document with front matter starts line numbers from contentStartLine", () => {
+        const result = parseMarkdown(fixturePath("frontmatter.md"));
+        const cap = captureConsole();
+        runRead(result, { number: true });
+        cap.restore();
+
+        const output = cap.lines.join("\n");
+        // contentStartLine=7: 出力行番号は7から始まり、フロントマター行(1-6)は含まれない
+        expect(output).toContain(" 8\t# Installation Guide");
+        expect(output).not.toContain("1\t---");
+        expect(output).not.toContain("6\t---");
+    });
+
+    test("metadata header lines do not have line number prefix when number=true", () => {
+        const result = parseMarkdown(fixturePath("sample.md"));
+        const cap = captureConsole();
+        runRead(result, { path: "1.1.1", number: true });
+        cap.restore();
+
+        const output = cap.lines.join("\n");
+        // メタデータヘッダーは行番号なし（設計§2.1: "メタデータヘッダーは非番号のまま出力する"）
+        expect(output).toMatch(/^---$/m);
+        expect(output).toMatch(/^markdive:$/m);
+        expect(output).not.toMatch(/^\d+\t---/m);
+        expect(output).not.toMatch(/^\d+\tmarkdive:/m);
+    });
+});
+
 describe("runDive – unsectioned summary formatting", () => {
     const result = parseMarkdown(fixturePath("link-summary.md"));
 

@@ -175,14 +175,21 @@ $ markdive dive spec.md --path 0 --json
 }
 ```
 
-### `read <file> --path <id>`
+### `read <file> [--path <id>] [--number]`
 
 指定セクションとその子孫セクションの本文を、メタデータヘッダー付きで出力します。
 
 ```bash
 markdive read README.md --path 2.1
 markdive read README.md --path 0
+markdive read README.md --path 2.1 --number
+markdive read README.md --number
 ```
+
+| オプション | デフォルト | 説明 |
+|---|---|---|
+| `--path <id>` | なし | 読み込むパスID（`0` は見出し未所属本文） |
+| `-n, --number` | `false` | 元Markdownファイルの行番号（1-based）を本文行に付与する |
 
 **出力形式（例）:**
 
@@ -210,6 +217,21 @@ markdive:
 ---
 
 Intro text before the first heading.
+```
+
+`--number` を指定した場合、メタデータヘッダーはそのまま、本文行のみ行番号付きで出力します。
+
+```text
+---
+markdive:
+  source: spec.md
+  path: 2.1
+  context: API Reference > Methods
+---
+
+42 ## Methods
+43 
+44 GET /users
 ```
 
 ## セクションID

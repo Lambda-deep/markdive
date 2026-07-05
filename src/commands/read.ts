@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 import { buildBreadcrumb, findSection } from "../parser";
 import type { ParsedDocument } from "../types";
@@ -5,6 +6,7 @@ import type { ParsedDocument } from "../types";
 /** read コマンドのオプション。 */
 export interface ReadOptions {
     path?: string;
+    number?: boolean;
 }
 
 /**
@@ -14,6 +16,8 @@ export interface ReadOptions {
  * パンくずリストを含むメタデータブロックとともに出力します。
  */
 export function runRead(result: ParsedDocument, options: ReadOptions): void {
+    const sourceLines = options.number ? readSourceLines(result.filePath) : undefined;
+
     // --path 指定時は従来通り
     if (options.path !== undefined) {
         if (options.path === "0") {
@@ -22,6 +26,14 @@ export function runRead(result: ParsedDocument, options: ReadOptions): void {
                 process.exit(1);
             }
             printMetadataHeader(result, "0", "unsectioned");
+            if (options.number) {
+                printNumberedSourceLines(
+                    sourceLines ?? [],
+                    result.unsectionedStartLine,
+                    result.unsectionedEndLine,
+                );
+                return;
+            }
             console.log(result.unsectionedContent);
             return;
         }
@@ -32,12 +44,21 @@ export function runRead(result: ParsedDocument, options: ReadOptions): void {
         }
         const breadcrumb = buildBreadcrumb(section);
         printMetadataHeader(result, section.id, breadcrumb);
+        if (options.number) {
+            printNumberedSourceLines(sourceLines ?? [], section.startLine, section.endLine);
+            return;
+        }
         printSection(section);
         return;
     }
 
     // --path 省略時: ファイル全文を出力
     printMetadataHeader(result, "(full)", "(full document)");
+    if (options.number) {
+        printNumberedSourceLines(sourceLines ?? [], result.contentStartLine, sourceLines?.length);
+        return;
+    }
+
     let printed = false;
     if (result.unsectionedContent) {
         console.log(result.unsectionedContent);
@@ -54,6 +75,22 @@ export function runRead(result: ParsedDocument, options: ReadOptions): void {
         }
     }
     // 完全空ファイルはメタデータヘッダーのみ
+}
+
+function readSourceLines(filePath: string): string[] {
+    return fs.readFileSync(filePath, "utf-8").replace(/\r\n/g, "\n").split("\n");
+}
+
+function printNumberedSourceLines(lines: string[], startLine?: number, endLine?: number): void {
+    if (startLine === undefined || endLine === undefined || endLine < startLine) {
+        return;
+    }
+
+    const width = String(endLine).length;
+    for (let lineNo = startLine; lineNo <= endLine; lineNo++) {
+        const line = lines[lineNo - 1] ?? "";
+        console.log(`${String(lineNo).padStart(width)}\t${line}`);
+    }
 }
 
 function printMetadataHeader(result: ParsedDocument, pathId: string, context: string): void {

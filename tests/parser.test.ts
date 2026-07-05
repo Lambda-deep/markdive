@@ -7,6 +7,10 @@ const fixturePath = (name: string) => path.join(__dirname, "fixtures", name);
 describe("parseMarkdown – sample.md", () => {
     const result = parseMarkdown(fixturePath("sample.md"));
 
+    test("sets contentStartLine to 1 when no front matter", () => {
+        expect(result.contentStartLine).toBe(1);
+    });
+
     test("returns correct number of top-level sections", () => {
         expect(result.sections).toHaveLength(2);
     });
@@ -35,6 +39,23 @@ describe("parseMarkdown – sample.md", () => {
         const installation = result.sections[0].children[0].children[0];
         expect(installation.id).toBe("1.1.1");
         expect(installation.title).toBe("Installation");
+    });
+
+    test("stores line range metadata for sections", () => {
+        const projectOverview = result.sections[0];
+        const installation = projectOverview.children[0].children[0];
+        expect(projectOverview.startLine).toBe(1);
+        expect(projectOverview.endLine).toBe(30);
+        expect(installation.startLine).toBe(11);
+        expect(installation.endLine).toBe(14);
+    });
+
+    test("last leaf section endLine equals the last line of the file", () => {
+        // 境界値分析: ファイル末尾で終わるセクションの endLine が正確か
+        const apiRef = result.sections[1]; // "2" API Reference
+        const methodTwo = apiRef.children[0].children[1]; // "2.1.2" methodTwo
+        expect(methodTwo.startLine).toBe(43);
+        expect(methodTwo.endLine).toBe(46); // trailing newline 込みの lines.length
     });
 
     test("second top-level section has correct ID", () => {
@@ -478,6 +499,11 @@ describe("parseMarkdown – presection.md (text before first heading)", () => {
         );
     });
 
+    test("stores line range metadata for unsectioned content", () => {
+        expect(result.unsectionedStartLine).toBe(1);
+        expect(result.unsectionedEndLine).toBe(2);
+    });
+
     test("section content contains only post-heading text", () => {
         expect(result.sections[0].content).toContain("Content of first section.");
     });
@@ -485,6 +511,10 @@ describe("parseMarkdown – presection.md (text before first heading)", () => {
 
 describe("parseMarkdown – frontmatter.md (unsectioned content separation)", () => {
     const result = parseMarkdown(fixturePath("frontmatter.md"));
+
+    test("sets contentStartLine to the line after front matter", () => {
+        expect(result.contentStartLine).toBe(7);
+    });
 
     test("does not create unsectionedContent when only blank lines exist after front matter", () => {
         expect(result.unsectionedContent).toBeUndefined();
