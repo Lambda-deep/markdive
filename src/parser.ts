@@ -23,18 +23,19 @@ export function parseMarkdown(filePath: string): ParsedDocument {
     // -----------------------------------------------------------------------
     // フロントマター検出とパース
     // -----------------------------------------------------------------------
-    let contentStartLine = 0;
+    let contentStartLineIndex = 0;
     const frontMatter = parseFrontMatter(lines);
     if (frontMatter !== undefined) {
         // フロントマターブロックの終端（2番目の区切り行）の次の行から本文開始
         const delimiter = lines[0].trim();
         for (let i = 1; i < lines.length; i++) {
             if (lines[i].trim() === delimiter) {
-                contentStartLine = i + 1;
+                contentStartLineIndex = i + 1;
                 break;
             }
         }
     }
+    const contentStartLine = contentStartLineIndex + 1;
 
     // -----------------------------------------------------------------------
     // パス1: 見出しの位置と本文行を収集する
@@ -50,7 +51,7 @@ export function parseMarkdown(filePath: string): ParsedDocument {
     const rawSections: RawSection[] = [];
     let inCodeBlock = false; // コードブロック内にいるかどうかを追跡
 
-    for (let i = contentStartLine; i < lines.length; i++) {
+    for (let i = contentStartLineIndex; i < lines.length; i++) {
         const line = lines[i];
         const trimmed = line.trim();
 
@@ -83,9 +84,11 @@ export function parseMarkdown(filePath: string): ParsedDocument {
     }
 
     const firstHeadingLineStart = rawSections[0]?.lineStart ?? lines.length;
-    const unsectionedContent = buildContent(lines.slice(contentStartLine, firstHeadingLineStart), {
+    const unsectionedLines = lines.slice(contentStartLineIndex, firstHeadingLineStart);
+    const unsectionedContent = buildContent(unsectionedLines, {
         stripSummaryComments: false,
     });
+    const unsectionedRange = getTrimmedLineRange(unsectionedLines, contentStartLine);
 
     // lineEnd を設定: 各セクションは同レベルまたは上位レベルの次の見出しが始まる行で終わる。
     for (let i = 0; i < rawSections.length; i++) {
@@ -143,6 +146,8 @@ export function parseMarkdown(filePath: string): ParsedDocument {
             title: raw.title,
             summary,
             content: buildContent(raw.contentLines),
+            startLine: raw.lineStart + 1,
+            endLine: raw.lineEnd,
             children: [],
             parent: null,
         };
@@ -173,8 +178,11 @@ export function parseMarkdown(filePath: string): ParsedDocument {
     return {
         filePath: absolutePath,
         sections: roots,
+        contentStartLine,
         frontMatter,
         unsectionedContent: unsectionedContent || undefined,
+        unsectionedStartLine: unsectionedRange?.startLine,
+        unsectionedEndLine: unsectionedRange?.endLine,
     };
 }
 
@@ -227,6 +235,29 @@ function buildContent(
     while (start < end && filtered[start].trim() === "") start++;
     while (end > start && filtered[end - 1].trim() === "") end--;
     return filtered.slice(start, end).join("\n");
+}
+
+/**
+ * 先頭/末尾の空行を除去した範囲の行番号（1-based inclusive）を返します。
+ */
+function getTrimmedLineRange(
+    contentLines: string[],
+    firstLineNumber: number,
+): { startLine: number; endLine: number } | undefined {
+    let start = 0;
+    let end = contentLines.length;
+
+    while (start < end && contentLines[start].trim() === "") start++;
+    while (end > start && contentLines[end - 1].trim() === "") end--;
+
+    if (start >= end) {
+        return undefined;
+    }
+
+    return {
+        startLine: firstLineNumber + start,
+        endLine: firstLineNumber + end - 1,
+    };
 }
 
 // ---------------------------------------------------------------------------

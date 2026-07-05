@@ -38,9 +38,10 @@ program
     .command("read <file>")
     .description("Markdownファイルの全文、または指定パスのセクション本文を出力する")
     .option("--path <id>", '読み込むパスID（例: "0" または "2.1"）')
-    .action((file: string, options: { path?: string }) => {
+    .option("-n, --number", "元ファイルの行番号を表示する", false)
+    .action((file: string, options: { path?: string; number: boolean }) => {
         const result = parseMarkdown(file);
-        runRead(result, { path: options.path });
+        runRead(result, { path: options.path, number: options.number });
     });
 
 program.parse(process.argv);

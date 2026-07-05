@@ -12,6 +12,10 @@ export interface Section {
     summary: string;
     /** このセクションに属する本文（サブセクションのコンテンツは含まない） */
     content: string;
+    /** ソースMarkdown上のセクション開始行（見出し行、1-based） */
+    startLine: number;
+    /** ソースMarkdown上のセクション終了行（子孫を含む、1-based inclusive） */
+    endLine: number;
     /** 子セクションの配列 */
     children: Section[];
     /** 親セクションへの参照（トップレベルセクションの場合は null） */
@@ -34,10 +38,16 @@ export interface ParsedDocument {
     filePath: string;
     /** トップレベルセクションの配列 */
     sections: Section[];
+    /** フロントマター除去後の本文開始行（1-based） */
+    contentStartLine: number;
     /** YAMLまたはTOMLフロントマター（存在する場合） */
     frontMatter?: FrontMatter;
     /** どの見出しにも属さない本文（存在する場合） */
     unsectionedContent?: string;
+    /** 見出し未所属本文の開始行（1-based, 存在する場合のみ） */
+    unsectionedStartLine?: number;
+    /** 見出し未所属本文の終了行（1-based inclusive, 存在する場合のみ） */
+    unsectionedEndLine?: number;
 }
 
 /**
